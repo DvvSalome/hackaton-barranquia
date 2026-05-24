@@ -121,8 +121,12 @@ def _build_wellness_summary(
     env = objects.get("environment_clues", [])
     if "ambiente_trabajo" in env:
         positives.append("entorno_de_trabajo_detectado")
+    if "ambiente_estudio" in env:
+        positives.append("ambiente_de_estudio_detectado")
     if "alimentos_visibles" in env:
         positives.append("momento_de_alimentacion")
+    if "objeto_distraccion" in env:
+        alerts.append("objeto_distractor_visible")
 
     # Gesture
     positive_gestures = {"thumbs_up", "ok", "open_hand"}

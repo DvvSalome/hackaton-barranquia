@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from typing import Any, Dict, List, Optional
 
 from pathlib import Path
@@ -95,6 +96,11 @@ class ChatReq(BaseModel):
     messages: List[ChatMessage]
     profile_id: Optional[str] = None
     profile_context: Optional[str] = None
+    # Synthesis context injected after check-in
+    specialists: Optional[List[Dict[str, Any]]] = None
+    ml_prediction: Optional[Dict[str, Any]] = None
+    diagnosis: Optional[Dict[str, Any]] = None
+    solution: Optional[Dict[str, Any]] = None
 
 
 class ExtensionIngestReq(BaseModel):
@@ -333,45 +339,97 @@ async def checkin_synthesize(req: SynthesizeReq) -> Dict[str, Any]:
 
 @app.post("/chat")
 async def chat(req: ChatReq) -> Dict[str, Any]:
-    """Simple chat with the Kairós Core (LangChain chain)."""
+    """Chat with Kairós Core — uses full synthesis context when available."""
     from langchain_openai import ChatOpenAI
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.output_parsers import StrOutputParser
     from config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
 
-    CORE_SYSTEM = """\
-Eres Kairós Core, el copiloto de bienestar digital del usuario.
-
-Tu rol en el check-in diario:
-1) Saludas brevemente y preguntas cómo estuvo el día.
-2) Haces máximo 3 preguntas, UNA POR TURNO, esperando respuesta entre cada una.
-3) Tras recopilar suficiente contexto, sintetizas y das una acción concreta.
-
-Voz: español neutro, cercano, breve. Sin emojis. Sin signos de exclamación.
-Una sola pregunta por turno. No prometas diagnósticos clínicos ni integraciones.
-{baseline_block}
-"""
+    # ── Build context blocks ──────────────────────────────────────────────────
     baseline_block = ""
     if req.profile_context:
-        baseline_block = f"\nContexto del usuario:\n{req.profile_context}"
+        baseline_block = f"\nPerfil del usuario:\n{req.profile_context}"
     elif req.profile_id and req.profile_id in _assessments:
         ctx = profile_context_summary(_assessments[req.profile_id])
         if ctx:
-            baseline_block = f"\nContexto del usuario:\n{ctx}"
+            baseline_block = f"\nPerfil del usuario:\n{ctx}"
+
+    specialist_block = ""
+    if req.specialists:
+        lines = []
+        for s in req.specialists:
+            name = s.get("name", s.get("agent", "?"))
+            score = s.get("score")
+            insight = s.get("insight", "sin datos")
+            recs = s.get("recommendations", [])
+            score_str = f"{score:.0f}/100" if score is not None else "sin dato"
+            line = f"• {name} [{score_str}]: {insight}"
+            if recs:
+                line += f" → {recs[0]}"
+            lines.append(line)
+        specialist_block = "\nLecturas de especialistas de hoy:\n" + "\n".join(lines)
+
+    ml_block = ""
+    if req.ml_prediction:
+        risk = req.ml_prediction.get("risk_level", "desconocido")
+        conf = req.ml_prediction.get("confidence", 0)
+        ml_block = f"\nModelo ML de bienestar: riesgo {risk} (confianza {conf:.0%})"
+
+    diagnosis_block = ""
+    if req.diagnosis:
+        pattern = req.diagnosis.get("pattern") or (req.diagnosis.get("matched_patterns") or [""])[0]
+        summary = req.diagnosis.get("summary", "")
+        if pattern:
+            diagnosis_block = f"\nDiagnóstico principal: {pattern}. {summary}"
+
+    solution_block = ""
+    if req.solution:
+        steps = req.solution.get("steps", [])
+        if steps:
+            solution_block = "\nPlan sugerido: " + " | ".join(steps[:3])
+
+    has_context = bool(specialist_block or ml_block or diagnosis_block)
+
+    if has_context:
+        system_prompt = f"""\
+Eres Kairós Core, el copiloto de bienestar digital del usuario.
+
+Acabas de recibir los análisis de tus 6 especialistas y el modelo ML. Tienes acceso completo a todo lo que detectaron hoy. Úsalo para dar consejos personalizados, ayudar a tomar decisiones y responder preguntas sobre el día del usuario.
+{baseline_block}
+{specialist_block}
+{ml_block}
+{diagnosis_block}
+{solution_block}
+
+Cómo comportarte:
+- Responde de forma conversacional, cálida, directa. Máximo 4 oraciones por turno.
+- Cuando el usuario pregunta qué hacer, da UNA acción concreta y pequeña.
+- Puedes referirte a lo que dijeron los especialistas si es relevante ("Tu agente de Sueño detectó...").
+- Si te preguntan por un tema que no está en los datos, responde desde el conocimiento general de bienestar.
+- Nunca menciones scores numéricos al usuario. Nunca uses diagnósticos clínicos.
+- Español neutro. Sin emojis. Sin signos de exclamación.
+"""
+    else:
+        system_prompt = f"""\
+Eres Kairós Core, el copiloto de bienestar digital del usuario.
+
+Aún no tienes datos del check-in de hoy. Pregunta brevemente cómo estuvo el día del usuario para ir construyendo contexto.
+{baseline_block}
+
+Voz: español neutro, cercano, breve. Sin emojis. Sin signos de exclamación.
+Una sola pregunta por turno.
+"""
 
     llm = ChatOpenAI(
         api_key=OPENROUTER_API_KEY,
         base_url=OPENROUTER_BASE_URL,
         model=OPENROUTER_MODEL,
         temperature=0.5,
-        max_tokens=400,
-        default_headers={
-            "HTTP-Referer": "https://kairos.local",
-            "X-Title": "Kairos-Core",
-        },
+        max_tokens=500,
+        default_headers={"HTTP-Referer": "https://kairos.local", "X-Title": "Kairos-Core"},
     )
 
-    msgs = [("system", CORE_SYSTEM.format(baseline_block=baseline_block))]
+    msgs = [("system", system_prompt)]
     for m in req.messages:
         msgs.append((m.role, m.content))
 

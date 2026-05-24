@@ -256,7 +256,13 @@ def assign_risk_label(row: pd.Series) -> int:
 
 
 def assign_diagnostic_label(row: pd.Series) -> str:
-    """Assign primary diagnostic pattern (priority order matches DiagnosticTool)."""
+    """Assign primary diagnostic pattern (priority order matches DiagnosticTool).
+
+    Classes with <50 samples in the DASS population are merged into their
+    nearest semantic parent to ensure the tree can learn a reliable boundary:
+      baja_energia  (n≈10) → distres_leve  (mild severity, same tier)
+      deficit_foco  (n≈5)  → distres_leve
+    """
     phq9 = row["phq9_score"]
     gad7 = row["gad7_score"]
     sleep = row["sleep_score_raw"]
@@ -276,14 +282,13 @@ def assign_diagnostic_label(row: pd.Series) -> str:
         return "fatiga_digital"
     if phq9 >= 5 or gad7 >= 5:
         return "distres_leve"
-    if energy < 30:
-        return "baja_energia"
+    # baja_energia and deficit_foco merged into distres_leve (too few samples)
+    if energy < 30 or focus < 30:
+        return "distres_leve"
     if screen_h >= 5:
         return "uso_digital_elevado"
     if sleep < 50:
         return "sueno_deficiente"
-    if focus < 30:
-        return "deficit_foco"
     return "bienestar_en_rango"
 
 

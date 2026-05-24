@@ -325,9 +325,14 @@ def referral_tool(context_json: str) -> str:
 
     diagnosis = ctx.get("diagnosis", {})
     risk_level = ctx.get("risk_level", "bajo")
+    escalate = ctx.get("escalate_referral", False)
 
     severity_code = diagnosis.get("severity_code", 0)
     patterns = diagnosis.get("matched_patterns", [])
+
+    # Auto-escalate if temporal trend shows repeated severe sessions
+    if escalate and severity_code < 3:
+        severity_code = max(severity_code, 2)
 
     refer = False
     specialist_type: str | None = None
@@ -339,6 +344,8 @@ def referral_tool(context_json: str) -> str:
         specialist_type = "psicólogo o psiquiatra"
         urgency = "prioritario (esta semana)"
         criteria.append("Indicadores clínicos en rango severo (PHQ-9 ≥15 o GAD-7 ≥10)")
+    if escalate and refer:
+        criteria.append("Patrón severo repetido en sesiones anteriores — derivación urgente")
     elif severity_code >= 2 or risk_level == "moderado":
         refer = True
         specialist_type = "psicólogo"
@@ -380,7 +387,7 @@ async def _generate_professional_summary(
     Solo se invoca cuando referral['refer'] es True.
     """
     from langchain_openai import ChatOpenAI
-    from langchain_core.prompts import ChatPromptTemplate
+    from langchain_core.messages import SystemMessage, HumanMessage
     from langchain_core.output_parsers import StrOutputParser
     from config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
 
@@ -423,6 +430,7 @@ Señales objetivas:
 - PHQ-9: {phq9} | GAD-7: {gad7}
 - Sueño: {sleep}/100 | Energía: {energy}/100 | Foco: {focus}/100
 - Horas de pantalla: {screen_h}h/día | % redes sociales: {social_pct}%
+{history_block}
 """
 
     llm = ChatOpenAI(
@@ -436,27 +444,25 @@ Señales objetivas:
             "X-Title": "Kairos-Triage",
         },
     )
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SUMMARY_SYSTEM),
-        ("human", SUMMARY_HUMAN.format(
-            diagnosis=diagnosis.get("diagnosis", ""),
-            patterns=", ".join(diagnosis.get("matched_patterns", [])),
-            severity=diagnosis.get("severity", ""),
-            specialist_type=referral.get("specialist_type", ""),
-            urgency=referral.get("urgency", ""),
-            criteria="; ".join(referral.get("referral_criteria", [])),
-            specialist_lines=specialist_lines or "sin lecturas disponibles",
-            phq9=signals.get("phq9_score", 0),
-            gad7=signals.get("gad7_score", 0),
-            sleep=signals.get("sleep_score", 50),
-            energy=signals.get("energy_score", 50),
-            focus=signals.get("focus_score", 50),
-            screen_h=round(signals.get("daily_screen_hours", 4), 1),
-            social_pct=round(signals.get("social_pct", 0), 1),
-        )),
-    ])
-    chain = prompt | llm | StrOutputParser()
-    return await chain.ainvoke({})
+    human_text = SUMMARY_HUMAN.format(
+        diagnosis=diagnosis.get("diagnosis", ""),
+        patterns=", ".join(diagnosis.get("matched_patterns", [])),
+        severity=diagnosis.get("severity", ""),
+        specialist_type=referral.get("specialist_type", ""),
+        urgency=referral.get("urgency", ""),
+        criteria="; ".join(referral.get("referral_criteria", [])),
+        specialist_lines=specialist_lines or "sin lecturas disponibles",
+        phq9=signals.get("phq9_score", 0),
+        gad7=signals.get("gad7_score", 0),
+        sleep=signals.get("sleep_score", 50),
+        energy=signals.get("energy_score", 50),
+        focus=signals.get("focus_score", 50),
+        screen_h=round(signals.get("daily_screen_hours", 4), 1),
+        social_pct=round(signals.get("social_pct", 0), 1),
+        history_block=signals.get("_history_context", ""),
+    )
+    messages = [SystemMessage(content=SUMMARY_SYSTEM), HumanMessage(content=human_text)]
+    return await (llm | StrOutputParser()).ainvoke(messages)
 
 
 # ─── Pipeline público ─────────────────────────────────────────────────────────
@@ -491,6 +497,7 @@ async def run_diagnostic_pipeline(
     ref_ctx = {
         "diagnosis": diagnosis,
         "risk_level": _infer_risk_from_severity(diagnosis.get("severity_code", 0)),
+        "escalate_referral": bool(signals.get("_escalate_referral", False)),
     }
     ref_raw = referral_tool.invoke(json.dumps(ref_ctx))
     referral: dict[str, Any] = json.loads(ref_raw)

@@ -12,6 +12,7 @@ import json
 from typing import Any
 
 from langchain_openai import ChatOpenAI
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -19,6 +20,7 @@ from config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
 from specialists import run_all_specialists, SPECIALIST_DEFINITIONS
 from ml_tool import predict_wellbeing
 from langchain_tools import run_diagnostic_pipeline
+import triage_history
 import diary as diary_store
 import meditation as meditation_store
 import spotify_tool
@@ -196,6 +198,14 @@ async def synthesize(
     ml_signals = _build_ml_signals(specialist_results, cv_data, digital_signals, assessments)
     ml_prediction = predict_wellbeing(ml_signals)
 
+    # Inject historical trend so SummaryTool can escalate if pattern is worsening
+    history_ctx = triage_history.get_context_for_llm(profile_id or "anon")
+    if history_ctx:
+        ml_signals["_history_context"] = history_ctx
+    trend = triage_history.get_trend(profile_id or "anon")
+    if trend.get("escalate_referral"):
+        ml_signals["_escalate_referral"] = True
+
     # Run diagnostic pipeline (DiagnosticTool → SolutionTool → ReferralTool → SummaryTool)
     triage = await run_diagnostic_pipeline(ml_signals, specialist_results)
 
@@ -215,18 +225,29 @@ async def synthesize(
             "X-Title": "Kairos-Core",
         },
     )
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", ORCHESTRATOR_SYSTEM.format(
-            specialist_readings=_format_specialists(specialist_results),
-            ml_prediction=json.dumps(ml_prediction, ensure_ascii=False),
-            cv_signals=_format_cv(cv_data),
-            digital_signals=_format_digital(digital_signals),
-            baseline_context=baseline_context or "no disponible",
-        )),
-        ("human", "Entrega la síntesis del día."),
-    ])
-    chain = prompt | llm | StrOutputParser()
-    summary = await chain.ainvoke({})
+    # Use raw messages (not ChatPromptTemplate) to avoid LangChain parsing
+    # JSON curly braces like {risk_level} as template variables
+    system_text = ORCHESTRATOR_SYSTEM.format(
+        specialist_readings=_format_specialists(specialist_results),
+        ml_prediction=json.dumps(ml_prediction, ensure_ascii=False),
+        cv_signals=_format_cv(cv_data),
+        digital_signals=_format_digital(digital_signals),
+        baseline_context=baseline_context or "no disponible",
+    )
+    messages = [
+        SystemMessage(content=system_text),
+        HumanMessage(content="Entrega la síntesis del día."),
+    ]
+    summary = await (llm | StrOutputParser()).ainvoke(messages)
+
+    # Persist triage result for temporal trend tracking
+    if profile_id:
+        triage_history.save_triage(
+            profile_id,
+            triage,
+            composite_score=composite_score,
+            risk_level=ml_prediction.get("risk_level"),
+        )
 
     return {
         "summary": summary,
@@ -238,4 +259,5 @@ async def synthesize(
         "solution": triage["solution"],
         "referral": triage["referral"],
         "professional_summary": triage["professional_summary"],
+        "trend": trend,
     }

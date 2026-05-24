@@ -14,9 +14,11 @@ OPENROUTER_FALLBACKS: list[str] = [
 ]
 
 SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+# Accept SUPABASE_ANON_KEY, SUPABASE_KEY, or SUPABASE_SERVICE_KEY in any order
+SUPABASE_KEY: str = os.getenv("SUPABASE_ANON_KEY", os.getenv("SUPABASE_KEY", ""))
+SUPABASE_SERVICE_KEY: str = os.getenv("SUPABASE_SERVICE_KEY", SUPABASE_KEY)
 
 CV_SERVICE_URL: str = os.getenv("CV_SERVICE_URL", "http://localhost:8002")
-API_SERVICE_URL: str = os.getenv("API_SERVICE_URL", "http://localhost:8001")
+API_SERVICE_URL: str = os.getenv("API_SERVICE_URL", "http://localhost:8010")
 
 ML_MODEL_PATH: str = os.getenv("ML_MODEL_PATH", "ml_model/wellbeing_model.pkl")

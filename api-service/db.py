@@ -10,6 +10,8 @@ from config import SUPABASE_SERVICE_KEY, SUPABASE_URL
 
 @lru_cache(maxsize=1)
 def db() -> Client:
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        raise RuntimeError("Supabase not configured (SUPABASE_URL / SUPABASE_SERVICE_KEY missing)")
     return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 

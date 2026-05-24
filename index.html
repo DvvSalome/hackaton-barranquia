@@ -3984,10 +3984,23 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     if (ctx) out.profile_context = ctx;
     return out;
   }
+  function kairaosSynthesisContext() {
+    return {
+      specialists: state.agentReadings   || undefined,
+      ml_prediction: state.mlPrediction  || undefined,
+      diagnosis: state.diagnosis         || undefined,
+      solution:  state.solution          || undefined,
+    };
+  }
+
   async function apiChat(messages){
     const r = await fetch(KAIROS_API + '/chat', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ messages, ...kairosProfileExtras() }),
+      body: JSON.stringify({
+        messages,
+        ...kairosProfileExtras(),
+        ...kairaosSynthesisContext(),
+      }),
     });
     if (!r.ok) throw new Error('chat ' + r.status);
     return (await r.json()).reply;
@@ -4363,6 +4376,8 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       foot.querySelector('#goto-kairos').onclick = () => {
         renderAgentsBoard();
         reflectCheckinDone();
+        // If synthesis already finished, open Core immediately with full context.
+        // If still running in background, startKairosCore will wait for it.
         startKairosCore();
       };
     }, 700);
@@ -4375,18 +4390,12 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     setMode('kairos');
     pbar.style.width = '100%';
     kairosHistory = [];
-    const factsByAgent = FLOW_AGENTS.map(id => `<b style="color:${AGENTS[id].color}">${AGENTS[id].title}</b> ${isComplete(id) ? '✓' : '○'}`).join(' · ');
-    const intro = `Soy Kairós Core. Tengo lo que aprendieron los demás hoy:<br/><span class="kc-muted">${factsByAgent}</span>`;
-    bubble('bot', intro, { agent: 'Kairós Core', color: '#c4b5fd' });
-    kairosHistory.push({ role: 'assistant', content: plainFromHTML(intro) });
 
-    if (state.coreSynthesis){
-      setTimeout(()=>{
-        bubble('bot', state.coreSynthesis, { agent: 'Kairós Core', color: '#c4b5fd' });
-        kairosHistory.push({ role: 'assistant', content: state.coreSynthesis });
-        renderKairosFreeform();
-      }, 600);
+    if (state.coreSynthesis && state.agentReadings){
+      // Synthesis already done — show it and open conversation
+      _showSynthesisAndOpenChat(state.coreSynthesis, state.agentReadings);
     } else if (state.checkinDone && state.lastTranscript){
+      // Check-in done but synthesis pending — run it now
       const tp = typing();
       apiSynthesize(state.lastTranscript).then(res => {
         tp.remove();
@@ -4398,49 +4407,77 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
         state.solution            = res.solution;
         state.referral            = res.referral;
         state.professionalSummary = res.professional_summary;
-        state.trend               = res.trend;
         save();
         refreshAnalytics();
         reflectCheckinDone();
-        bubble('bot', res.summary, { agent: 'Kairós Core', color: '#c4b5fd' });
-        kairosHistory.push({ role: 'assistant', content: res.summary });
-        renderKairosFreeform();
+        _showSynthesisAndOpenChat(res.summary, res.specialists);
       }).catch(()=>{
         tp.remove();
-        bubble('bot', synthesisLine(), { agent: 'Kairós Core', color: '#c4b5fd' });
-        renderKairosFreeform();
+        _openChatNoContext();
       });
     } else {
-      setTimeout(()=>{
-        const line = synthesisLine();
-        bubble('bot', line, { agent: 'Kairós Core', color: '#c4b5fd' });
-        kairosHistory.push({ role: 'assistant', content: plainFromHTML(line) });
-        renderKairosFreeform();
-      }, 600);
+      _openChatNoContext();
     }
   }
 
-  function synthesisLine(){
-    const mood = state.answers['animo:now'];
-    const sleep = state.answers['sueno:quality'];
-    const focus = state.answers['foco:priority'];
-    if (!mood && !sleep && !focus){
-      return 'Aún no tengo tu recopilación de hoy. Cuando termines, cruzo todo y te doy una lectura del día.';
+  function _showSynthesisAndOpenChat(summary, specialists){
+    // Agent badge line
+    const badges = (specialists || []).map(s => {
+      const scoreStr = s.score != null ? Math.round(s.score) : '–';
+      const col = (Object.values(AGENTS).find(a => a.title === s.name) || {}).color || '#a78bfa';
+      return `<span style="color:${col};font-weight:600">${s.name}</span> <span style="opacity:.6">${scoreStr}</span>`;
+    }).join(' &nbsp;·&nbsp; ');
+    if (badges) {
+      bubble('bot', `He procesado los datos de hoy:<br/><span style="font-size:12px">${badges}</span>`,
+        { agent: 'Kairós Core', color: '#c4b5fd' });
     }
-    const parts = [];
-    if (mood) parts.push(`tu ánimo es <b>${labelOfChoice('animo:now', mood)}</b>`);
-    if (sleep) parts.push(`dormiste <b>${labelOfChoice('sueno:quality', sleep)}</b>`);
-    if (focus) parts.push(`quieres priorizar <b>${labelOfChoice('foco:priority', focus)}</b>`);
-    return 'Hoy ' + parts.join(', ') + '. ¿Qué quieres mirar primero?';
+
+    // Synthesis summary
+    setTimeout(()=>{
+      bubble('bot', summary, { agent: 'Kairós Core', color: '#c4b5fd' });
+      kairosHistory.push({ role: 'assistant', content: summary });
+
+      // Open question to invite conversation
+      setTimeout(()=>{
+        const tp2 = typing('#c4b5fd');
+        apiChat([...kairosHistory, {
+          role: 'user',
+          content: '[SYSTEM: el usuario acaba de leer tu síntesis. Hazle UNA pregunta abierta para invitarle a hablar sobre lo que más le preocupa o le interesa del día. Máximo 2 oraciones.]'
+        }]).then(q => {
+          tp2.remove();
+          bubble('bot', q, { agent: 'Kairós Core', color: '#c4b5fd' });
+          kairosHistory.push({ role: 'assistant', content: q });
+          renderKairosFreeform();
+        }).catch(()=>{
+          tp2.remove();
+          renderKairosFreeform();
+        });
+      }, 800);
+    }, 500);
+  }
+
+  function _openChatNoContext(){
+    bubble('bot',
+      'Aún no tengo tu recopilación de hoy. Puedes contarme cómo va el día y te ayudo con lo que necesites.',
+      { agent: 'Kairós Core', color: '#c4b5fd' });
+    kairosHistory.push({ role: 'assistant', content: 'Aún no tengo tu recopilación de hoy. Puedes contarme cómo va el día y te ayudo con lo que necesites.' });
+    renderKairosFreeform();
   }
 
   function renderKairosFreeform(){
     foot.innerHTML = '';
-    const suggestions = [
-      'Dame un resumen del día',
-      '¿Qué debería cuidar mañana?',
-      '¿Cómo voy esta semana?',
-      'Hablar con un agente',
+    // Dynamic suggestions based on what we know
+    const hasSynthesis = !!(state.coreSynthesis && state.agentReadings);
+    const suggestions = hasSynthesis ? [
+      '¿Qué debería hacer ahora mismo?',
+      '¿Cuál es mi mayor riesgo hoy?',
+      'Explícame el diagnóstico',
+      '¿Qué hago esta noche para dormir mejor?',
+    ] : [
+      'Cuéntame cómo fue el día',
+      '¿Qué puedes hacer por mí?',
+      'Ayúdame a tomar una decisión',
+      '¿Cómo mejorar mi energía?',
     ];
     const chips = document.createElement('div');
     chips.className = 'kc-chips';

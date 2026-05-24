@@ -82,8 +82,10 @@ _INDOOR_OBJECTS = {"chair", "couch", "bed", "dining table", "toilet", "tv", "lap
 _OUTDOOR_OBJECTS = {"car", "truck", "bus", "bicycle", "motorcycle", "traffic light",
                     "stop sign", "bench", "tree", "umbrella"}
 _WORK_OBJECTS = {"laptop", "keyboard", "mouse", "monitor", "desk", "book", "backpack"}
+_STUDY_OBJECTS = {"book", "backpack", "scissors"}  # COCO classes present in study setups
 _FOOD_OBJECTS = {"pizza", "sandwich", "apple", "banana", "orange", "cake",
                  "carrot", "hot dog", "donut", "cup", "bottle", "wine glass"}
+_DISTRACTION_OBJECTS = {"cell phone", "remote", "tv", "couch", "bed"}
 
 def _environment_clues(objects: list[dict]) -> list[str]:
     detected_labels = {o["label"] for o in objects}
@@ -94,8 +96,12 @@ def _environment_clues(objects: list[dict]) -> list[str]:
         clues.append("exterior")
     if detected_labels & _WORK_OBJECTS:
         clues.append("ambiente_trabajo")
+    if detected_labels & _STUDY_OBJECTS:
+        clues.append("ambiente_estudio")
     if detected_labels & _FOOD_OBJECTS:
         clues.append("alimentos_visibles")
+    if detected_labels & _DISTRACTION_OBJECTS:
+        clues.append("objeto_distraccion")
     if not clues:
         clues.append("entorno_desconocido")
     return clues
