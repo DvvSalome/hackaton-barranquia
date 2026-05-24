@@ -214,6 +214,9 @@ def derive_features(dass: pd.DataFrame, seed: int = 42) -> pd.DataFrame:
         "social_pct":        social_pct,
         "drowsiness_count":  drowsiness,
         "distraction_count": distraction,
+        # Raw DASS scores kept for direct label assignment
+        "dass_d":            dass["dass_d"].values,
+        "dass_a":            dass["dass_a"].values,
     })
     return feat
 
@@ -221,25 +224,35 @@ def derive_features(dass: pd.DataFrame, seed: int = 42) -> pd.DataFrame:
 # ─── Step 3: Assign labels ────────────────────────────────────────────────────
 
 def assign_risk_label(row: pd.Series) -> int:
-    """Assign wellbeing risk label (0=bajo, 1=moderado, 2=alto)."""
-    phq9 = row["phq9_score"]
-    gad7 = row["gad7_score"]
+    """Assign wellbeing risk label from DASS severity directly.
+
+    Uses DASS-42 clinical cutoffs (Lovibond & Lovibond 1995) as ground truth,
+    then adjusts for secondary signals (screen time, sleep). This avoids the
+    circular label-from-derived-features problem.
+    """
+    dass_d = row["dass_d"]  # raw DASS-42 depression sum (0-42)
+    dass_a = row["dass_a"]  # raw DASS-42 anxiety sum (0-42)
     screen_h = row["daily_screen_hours"]
     sleep_s = row["sleep_score_raw"]
-    social_pct = row["social_pct"]
 
-    phq_r = 2 if phq9 >= 15 else (1 if phq9 >= 5 else 0)
-    gad_r = 2 if gad7 >= 10 else (1 if gad7 >= 5 else 0)
-    screen_r = 2 if screen_h >= 8 else (1 if screen_h >= 5 else 0)
-    sleep_r = 1 if sleep_s < 35 else 0
-    social_r = 1 if social_pct > 60 else 0
+    # Depression severity (Lovibond 1995 DASS-42 cutoffs)
+    if dass_d >= 21:    dep_r = 2   # severe / extremely severe
+    elif dass_d >= 14:  dep_r = 1   # moderate
+    elif dass_d >= 10:  dep_r = 1   # mild
+    else:               dep_r = 0   # normal
 
-    score_sum = phq_r * 3 + gad_r * 3 + screen_r + sleep_r + social_r
-    if score_sum >= 8:
-        return 2
-    if score_sum >= 3:
-        return 1
-    return 0
+    # Anxiety severity
+    if dass_a >= 15:    anx_r = 2
+    elif dass_a >= 10:  anx_r = 1
+    elif dass_a >= 8:   anx_r = 1
+    else:               anx_r = 0
+
+    # Boost from secondary digital/sleep signals
+    screen_boost = 1 if screen_h >= 8 else 0
+    sleep_boost  = 1 if sleep_s < 35 else 0
+
+    combined = max(dep_r, anx_r) + (screen_boost + sleep_boost) // 2
+    return min(combined, 2)
 
 
 def assign_diagnostic_label(row: pd.Series) -> str:
@@ -328,7 +341,7 @@ def train_wellbeing(X: np.ndarray, y: np.ndarray) -> None:
 
     with open(WELLBEING_MODEL_PATH, "wb") as f:
         pickle.dump(model, f)
-    print(f"[wellbeing] Saved → {WELLBEING_MODEL_PATH}")
+    print(f"[wellbeing] Saved -> {WELLBEING_MODEL_PATH}")
 
 
 def train_diagnostic(X: np.ndarray, y_labels: np.ndarray) -> None:
@@ -337,7 +350,7 @@ def train_diagnostic(X: np.ndarray, y_labels: np.ndarray) -> None:
     y = le.fit_transform(y_labels)
     classes = le.classes_
 
-    dist = dict(zip(*np.unique(y_labels, return_counts=True)))
+    dist = {k: int(v) for k, v in zip(*np.unique(y_labels, return_counts=True))}
     print(f"[diagnostic] Dataset: {len(X)} samples | patterns: {json.dumps(dist, ensure_ascii=False)}")
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -367,7 +380,7 @@ def train_diagnostic(X: np.ndarray, y_labels: np.ndarray) -> None:
     bundle = {"model": tree, "label_encoder": le, "feature_names": feature_names}
     with open(DIAGNOSTIC_MODEL_PATH, "wb") as f:
         pickle.dump(bundle, f)
-    print(f"[diagnostic] Saved → {DIAGNOSTIC_MODEL_PATH}")
+    print(f"[diagnostic] Saved -> {DIAGNOSTIC_MODEL_PATH}")
 
 
 # ─── Main ──────────────────────────────────────────────────────────────────────
@@ -402,8 +415,8 @@ def main() -> None:
 
     print("\n" + "=" * 60)
     print("Training complete.")
-    print(f"  wellbeing  → {WELLBEING_MODEL_PATH}")
-    print(f"  diagnostic → {DIAGNOSTIC_MODEL_PATH}")
+    print(f"  wellbeing  -> {WELLBEING_MODEL_PATH}")
+    print(f"  diagnostic -> {DIAGNOSTIC_MODEL_PATH}")
     print("=" * 60)
 
 

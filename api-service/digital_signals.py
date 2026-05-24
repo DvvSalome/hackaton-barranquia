@@ -102,7 +102,11 @@ def ingest(payload: dict[str, Any]) -> dict[str, Any]:
 
 def get_summary(profile_id: str | None = None, last_n: int = 20) -> dict[str, Any]:
     """Return aggregated digital signals. Returns minutes for dashboard compatibility."""
-    records = [r for r in _store if profile_id is None or r.get("profile_id") == profile_id]
+    # Include profile-specific records AND the demo seed (profile_id=None) as baseline
+    records = [
+        r for r in _store
+        if profile_id is None or r.get("profile_id") == profile_id or r.get("session_id") == "demo-seed"
+    ]
     if last_n:
         records = records[-last_n:]
 

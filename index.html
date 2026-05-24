@@ -2773,21 +2773,21 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       <span class="sub">22 — 28 mayo</span>
     </div>
     <section class="progress-grid">
-      <div class="pring fade d3" style="--c:#6366f1;--pct:86">
-        <div class="ring"><span class="v">6/7</span></div>
-        <div class="info"><div class="nm">Sueño</div><div class="dt">≥ 7h</div></div>
+      <div class="pring fade d3" id="pring-sueno" style="--c:#6366f1;--pct:86">
+        <div class="ring"><span class="v">86</span></div>
+        <div class="info"><div class="nm">Sueño</div><div class="dt">sin datos hoy</div></div>
       </div>
-      <div class="pring fade d3" style="--c:#6366f1;--pct:57">
-        <div class="ring"><span class="v">4/7</span></div>
-        <div class="info"><div class="nm">Pantalla</div><div class="dt">≤ 4h</div></div>
+      <div class="pring fade d3" id="pring-pantalla" style="--c:#6366f1;--pct:57">
+        <div class="ring"><span class="v">57</span></div>
+        <div class="info"><div class="nm">Pantalla</div><div class="dt">sin datos hoy</div></div>
       </div>
-      <div class="pring fade d4" style="--c:#8b5cf6;--pct:71">
-        <div class="ring"><span class="v">5/7</span></div>
-        <div class="info"><div class="nm">Movimiento</div><div class="dt">8k pasos</div></div>
+      <div class="pring fade d4" id="pring-energia" style="--c:#8b5cf6;--pct:71">
+        <div class="ring"><span class="v">71</span></div>
+        <div class="info"><div class="nm">Energía</div><div class="dt">sin datos hoy</div></div>
       </div>
-      <div class="pring fade d4" style="--c:#a78bfa;--pct:43">
-        <div class="ring"><span class="v">3/7</span></div>
-        <div class="info"><div class="nm">Foco</div><div class="dt">2 sesiones</div></div>
+      <div class="pring fade d4" id="pring-foco" style="--c:#a78bfa;--pct:43">
+        <div class="ring"><span class="v">43</span></div>
+        <div class="info"><div class="nm">Foco</div><div class="dt">sin datos hoy</div></div>
       </div>
     </section>
 
@@ -3433,27 +3433,27 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
         <span class="name">Kairós Core</span>
         <span class="status">principal · activo</span>
       </div>
-      <div class="agent" style="--agent-c:#fb7185">
+      <div class="agent" style="--agent-c:#fb7185" data-agent="animo">
         <span class="pulse"></span>
         <span class="name">Ánimo</span>
         <span class="status" style="color:#b45309">pendiente hoy</span>
       </div>
-      <div class="agent" style="--agent-c:#60a5fa">
+      <div class="agent" style="--agent-c:#60a5fa" data-agent="sueno">
         <span class="pulse"></span>
         <span class="name">Sueño</span>
         <span class="status" style="color:#b45309">pendiente hoy</span>
       </div>
-      <div class="agent live" style="--agent-c:#8b5cf6">
+      <div class="agent live" style="--agent-c:#8b5cf6" data-agent="pantalla">
         <span class="pulse"></span>
         <span class="name">Pantalla</span>
         <span class="status">contando · 1h 42m</span>
       </div>
-      <div class="agent" style="--agent-c:#a78bfa">
+      <div class="agent" style="--agent-c:#a78bfa" data-agent="foco">
         <span class="pulse"></span>
         <span class="name">Foco</span>
         <span class="status">en espera</span>
       </div>
-      <div class="agent" style="--agent-c:#84cc16">
+      <div class="agent" style="--agent-c:#84cc16" data-agent="energia">
         <span class="pulse"></span>
         <span class="name">Energía</span>
         <span class="status">datos completos hoy</span>
@@ -3462,12 +3462,12 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
 
     <div class="panel-section fade d3">
       <div class="panel-title">Hoy en tu día</div>
-      <div class="ins-card" style="--ins-c:#8b5cf6">
+      <div class="ins-card" id="ins-card-0" style="--ins-c:#8b5cf6">
         <div class="ti">Buen ritmo de mañana</div>
         <div class="desc">Llevas 2h sin abrir redes sociales. Sigue así.</div>
         <div class="meta">9:42 · agente foco</div>
       </div>
-      <div class="ins-card" style="--ins-c:#f59e0b">
+      <div class="ins-card" id="ins-card-1" style="--ins-c:#f59e0b">
         <div class="ti">Café tardío detectado</div>
         <div class="desc">Tu última taza fue ayer a las 17:30 — podría afectar el sueño.</div>
         <div class="meta">ayer · agente sueño</div>
@@ -4037,6 +4037,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
         state.solution         = res.solution;
         save();
         refreshAnalytics();
+        reflectCheckinDone();
       }).catch(err => console.warn('[kairos] síntesis falló:', err));
     }
     divider('Listo');
@@ -4099,6 +4100,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
         state.solution       = res.solution;
         save();
         refreshAnalytics();
+        reflectCheckinDone();
         bubble('bot', res.summary, { agent: 'Kairós Core', color: '#c4b5fd' });
         kairosHistory.push({ role: 'assistant', content: res.summary });
         renderKairosFreeform();
@@ -4451,6 +4453,54 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     `;
   }
 
+  /* ═══════════ APPLY LIVE SCORES (pring + right panel + insight cards) ═══════════ */
+  function applyLiveScores(){
+    const readings = state.agentReadings || [];
+    if (!readings.length) return;
+
+    const scoreMap = {};
+    readings.forEach(r => { if (r.score != null) scoreMap[r.agent] = Math.round(r.score); });
+
+    // Right panel agents — show score if available
+    document.querySelectorAll('.right .agent[data-agent]').forEach(el => {
+      const key = el.dataset.agent;
+      const statusEl = el.querySelector('.status');
+      if (!statusEl || scoreMap[key] == null) return;
+      statusEl.textContent = `${scoreMap[key]}/100 · al día`;
+      statusEl.style.color = '#7c3aed';
+    });
+
+    // Dashboard pring circles
+    const PRING_AGENTS = { 'pring-sueno':'sueno', 'pring-pantalla':'pantalla', 'pring-energia':'energia', 'pring-foco':'foco' };
+    Object.entries(PRING_AGENTS).forEach(([id, agent]) => {
+      if (scoreMap[agent] == null) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      const pct = scoreMap[agent];
+      el.style.setProperty('--pct', pct);
+      const v = el.querySelector('.v');
+      if (v) v.textContent = pct;
+      const dt = el.querySelector('.dt');
+      if (dt) dt.textContent = `hoy · ${pct}/100`;
+    });
+
+    // "Hoy en tu día" insight cards — top 2 most-notable specialist insights
+    const INS_COLORS = { animo:'#fb7185', sueno:'#a78bfa', foco:'#60a5fa', energia:'#fbbf24', pantalla:'#34d399', rachas:'#fb923c' };
+    const topInsights = readings
+      .filter(r => r.insight && r.insight.trim() && r.score != null)
+      .sort((a, b) => a.score - b.score) // surface lowest scores first
+      .slice(0, 2);
+    topInsights.forEach((r, i) => {
+      const card = document.getElementById(`ins-card-${i}`);
+      if (!card) return;
+      card.style.setProperty('--ins-c', INS_COLORS[r.agent] || '#8b5cf6');
+      const parts = r.insight.split(/\.\s+/);
+      card.querySelector('.ti').textContent = parts[0].replace(/\.$/, '');
+      card.querySelector('.desc').textContent = parts.slice(1).join('. ') || r.insight;
+      card.querySelector('.meta').textContent = `hoy · agente ${r.name.toLowerCase()}`;
+    });
+  }
+
   /* ═══════════ REFLECT CHECK-IN DONE IN HERO ═══════════ */
   function reflectCheckinDone(){
     if (!state.checkinDone) return;
@@ -4458,6 +4508,20 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     if (ci && !ci.dataset.done){
       ci.dataset.done = '1';
       ci.classList.add('checkin-done');
+      const CHIP_DEFS = [
+        { agent:'animo',    label:'Ánimo',   color:'#fb7185' },
+        { agent:'sueno',    label:'Sueño',   color:'#60a5fa' },
+        { agent:'foco',     label:'Foco',    color:'#a78bfa' },
+        { agent:'energia',  label:'Energía', color:'#84cc16' },
+        { agent:'pantalla', label:'Pantalla',color:'#34d399' },
+        { agent:'rachas',   label:'Rachas',  color:'#fb923c' },
+      ];
+      const sm = {};
+      (state.agentReadings || []).forEach(r => { if (r.score != null) sm[r.agent] = Math.round(r.score); });
+      const chips = CHIP_DEFS.map(d => {
+        const lbl = sm[d.agent] != null ? `${d.label} ${sm[d.agent]}` : `${d.label} ✓`;
+        return `<span class="cm-chip cm-chip-ok" data-chip-agent="${d.agent}" style="--c:${d.color}">${lbl}</span>`;
+      }).join('');
       ci.innerHTML = `
         <div>
           <div class="cm-meta">
@@ -4470,12 +4534,9 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
             <button class="cta" id="ci-kairos">↗ Hablar con Kairós Core</button>
             <button class="cta-ghost" id="ci-edit">Editar respuestas</button>
           </div>
-          <div class="cm-agents">
+          <div class="cm-agents" id="cm-agents-live">
             <span class="lbl">HOY PARTICIPARON</span>
-            <span class="cm-chip cm-chip-ok" style="--c:#fb7185">Ánimo ✓</span>
-            <span class="cm-chip cm-chip-ok" style="--c:#60a5fa">Sueño ✓</span>
-            <span class="cm-chip cm-chip-ok" style="--c:#a78bfa">Foco ✓</span>
-            <span class="cm-chip cm-chip-ok" style="--c:#84cc16">Energía ✓</span>
+            ${chips}
           </div>
         </div>
         <div class="checkin-orb" aria-hidden="true">
@@ -4485,14 +4546,27 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       `;
       ci.querySelector('#ci-kairos').onclick = () => openChat('kairos');
       ci.querySelector('#ci-edit').onclick = () => openChat('recopilacion');
+    } else if (ci && ci.dataset.done) {
+      // Hero already rendered — update chip scores if synthesis just arrived
+      const sm = {};
+      (state.agentReadings || []).forEach(r => { if (r.score != null) sm[r.agent] = Math.round(r.score); });
+      ci.querySelectorAll('[data-chip-agent]').forEach(chip => {
+        const key = chip.dataset.chipAgent;
+        if (sm[key] != null) {
+          const lbl = chip.textContent.replace(/\s*\d+$/, '').replace(/\s*✓$/, '').trim();
+          chip.textContent = `${lbl} ${sm[key]}`;
+        }
+      });
     }
-    // Right panel agents
+    // Mark all pending right-panel agents as "al día ✓" (fallback for agents without data-agent)
     document.querySelectorAll('.right .agent .status').forEach(s => {
       if (s.textContent.toLowerCase().includes('pendiente')){
         s.textContent = 'al día ✓';
         s.style.color = '#7c3aed';
       }
     });
+    // Apply real scores on top
+    applyLiveScores();
   }
 
   /* ═══════════ WIRING ═══════════ */
@@ -4836,6 +4910,8 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
           }).join('');
       }
     }
+    // Sync pring circles + right-panel agents + insight cards
+    applyLiveScores();
   }
 
   function showView(name){

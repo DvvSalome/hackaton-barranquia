@@ -14,7 +14,7 @@ import { categorize, normalizeDomain, detectSearch } from './categories.js';
 
 // ─── Constantes ───────────────────────────────────────────────
 const DEFAULTS = {
-  apiBase: 'http://localhost:8000',
+  apiBase: 'http://localhost:8010',
   profileId: '',
   enabled: true,
   flushIntervalMin: 5,
