@@ -1977,6 +1977,27 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     background: var(--teal-500);
     box-shadow:0 0 0 4px rgba(139,92,246,.18);
   }
+  .screen-source-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    flex-wrap:wrap;
+  }
+  .screen-source-toggle{
+    border:1px solid rgba(139,92,246,.22);
+    background:rgba(139,92,246,.08);
+    color:#6d28d9;
+    border-radius:999px;
+    padding:7px 11px;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:background .15s ease, border-color .15s ease, transform .15s ease;
+  }
+  .screen-source-toggle:hover{
+    background:rgba(139,92,246,.14);
+    border-color:rgba(139,92,246,.36);
+    transform:translateY(-1px);
+  }
   .hero h1{
     font-family:'Outfit', 'Inter', sans-serif; font-weight:600;
     margin: 14px 0 0;
@@ -2053,6 +2074,63 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   .wave-axis span{flex:1;text-align:center}
   .wave-axis span:first-child{text-align:left}
   .wave-axis span:last-child{text-align:right}
+  .phone-shot{
+    margin-top:14px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:10px 12px;
+    border:1px dashed rgba(139,92,246,.28);
+    border-radius:14px;
+    background: rgba(139,92,246,.045);
+  }
+  .phone-shot.warn{
+    border-color: rgba(244,63,94,.45);
+    background: rgba(244,63,94,.07);
+    box-shadow: 0 10px 28px -22px rgba(190,18,60,.8);
+  }
+  .phone-shot.warn .phone-shot-title{color:#be123c}
+  .phone-shot.warn .phone-shot-sub{color:#be123c}
+  .phone-shot-copy{
+    min-width:0;
+  }
+  .phone-shot-title{
+    font-size:12px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--teal-700);
+  }
+  .phone-shot-sub{
+    margin-top:2px; font-size:11.5px; color:var(--muted);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .phone-shot-btn{
+    flex-shrink:0;
+    display:inline-flex; align-items:center; gap:6px;
+    padding:7px 10px;
+    border-radius:999px;
+    background:rgba(139,92,246,.12);
+    color:#6d28d9;
+    font-size:12px; font-weight:700;
+    cursor:pointer;
+  }
+  .phone-shot input{display:none}
+  .phone-shot-warning{
+    display:none;
+    margin-top:8px;
+    font-size:12px;
+    font-weight:600;
+    color:#be123c;
+  }
+  .phone-shot.warn .phone-shot-warning{display:block}
+  .phone-wave-placeholder{
+    width:100%;
+    height:100%;
+    display:grid; place-items:center;
+    border:1px dashed rgba(139,92,246,.24);
+    border-radius:16px;
+    background:rgba(139,92,246,.045);
+    color:var(--muted);
+    font-size:12.5px;
+    text-align:center;
+    padding:0 18px;
+  }
 
   /* metric trio */
   .trio{
@@ -2723,8 +2801,11 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     </section>
 
     <!-- HERO: screen time -->
-    <section class="hero fade d2" aria-label="Pantalla hoy">
-      <div class="label">Pantalla hoy</div>
+    <section class="hero fade d2" aria-label="Pantalla hoy PC" data-screen-source="pc">
+      <div class="screen-source-row">
+        <div class="label" id="screen-source-label">Pantalla hoy PC</div>
+        <button class="screen-source-toggle" id="screen-source-toggle" type="button">Datos pantalla celular</button>
+      </div>
       <h1>
         <span><em id="hours">1</em>h <em id="mins">42</em>m</span>
         <span class="unit">de 4h objetivo</span>
@@ -2740,6 +2821,17 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       <div class="wave" id="wave" aria-hidden="true"></div>
       <div class="wave-axis">
         <span>8:00</span><span>11:00</span><span>14:00</span><span>17:00</span><span>20:00</span><span>22:00</span>
+      </div>
+      <div class="phone-shot" id="phone-shot">
+        <div class="phone-shot-copy">
+          <div class="phone-shot-title">Celular</div>
+          <div class="phone-shot-sub" id="phone-shot-sub">Sube una captura de Screen Time para leer esos datos.</div>
+          <div class="phone-shot-warning" id="phone-shot-warning">Advertencia: no puedes cambiar a datos del celular sin subir primero la captura de Screen Time.</div>
+        </div>
+        <label class="phone-shot-btn">
+          Captura
+          <input id="phone-shot-input" type="file" accept="image/*" />
+        </label>
       </div>
     </section>
 

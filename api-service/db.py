@@ -338,6 +338,22 @@ def fetch_sessions_for_day(
     return res.data or []
 
 
+def fetch_sessions_between(
+    profile_id: str, start_iso: str, end_iso: str
+) -> List[Dict[str, Any]]:
+    res = (
+        db()
+        .table("browsing_sessions")
+        .select("domain,url,category,duration_sec,active,started_at,ended_at")
+        .eq("profile_id", profile_id)
+        .gte("started_at", start_iso)
+        .lt("started_at", end_iso)
+        .limit(5000)
+        .execute()
+    )
+    return res.data or []
+
+
 def fetch_queries_for_day(
     profile_id: str, day_iso: str
 ) -> List[Dict[str, Any]]:

@@ -18,6 +18,9 @@
   window.__kairosDigitalPanelMounted = true;
 
   const API = window.KAIROS_API_URL || 'http://127.0.0.1:8787';
+  const PHONE_FILE_KEY = 'kairos_phone_screentime_file';
+  const SCREEN_SOURCE_KEY = 'kairos_screen_source_mode';
+  let latestPcScreen = null;
 
   const CAT_LABELS = {
     social: 'Social', entertainment: 'Entretenimiento', news: 'Noticias',
@@ -277,6 +280,242 @@
     if (m < 60) return m + 'm';
     return Math.floor(m / 60) + 'h ' + (m % 60 ? (m % 60 + 'm') : '');
   }
+  function fmtHeroTime(totalMinutes) {
+    const m = Math.max(0, Math.round(totalMinutes || 0));
+    return { hours: Math.floor(m / 60), mins: m % 60, label: fmtMin(m) };
+  }
+  function escapeHTML(value) {
+    const div = document.createElement('div');
+    div.textContent = String(value || '');
+    return div.innerHTML;
+  }
+  function colorForRatio(v) {
+    if (v < .35) return ['#c4b5fd', '#c4b5fd'];
+    if (v < .55) return ['#a78bfa', '#c4b5fd'];
+    if (v < .75) return ['#818cf8', '#a78bfa'];
+    return ['#6366f1', '#818cf8'];
+  }
+
+  function renderScreenWave(hourly) {
+    const wave = document.getElementById('wave');
+    if (!wave || !Array.isArray(hourly)) return;
+    wave.innerHTML = '';
+    hourly.forEach((bucket, i) => {
+      const ratio = Math.max(0.05, Math.min(1, Number(bucket.ratio) || 0));
+      const [top, bot] = colorForRatio(ratio);
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.setProperty('--bar-top', top);
+      bar.style.setProperty('--bar-bot', bot);
+      bar.style.height = '0%';
+      const tip = document.createElement('span');
+      tip.className = 'tip';
+      tip.textContent = `${bucket.label || (bucket.hour + 'h')} · ${bucket.minutes || 0}m`;
+      bar.appendChild(tip);
+      wave.appendChild(bar);
+      setTimeout(() => {
+        bar.style.transition = 'height .7s cubic-bezier(.2,.7,.2,1)';
+        bar.style.height = (ratio * 100) + '%';
+      }, 40 + i * 25);
+    });
+
+    const hero = screenHero();
+    const axis = hero && hero.querySelector('.wave-axis');
+    if (axis) {
+      axis.innerHTML = '';
+      const ticks = [8, 11, 14, 17, 20, 22];
+      ticks.forEach(h => {
+        const span = document.createElement('span');
+        span.textContent = `${h}:00`;
+        axis.appendChild(span);
+      });
+    }
+  }
+
+  function updateRightPanelScreen(screen) {
+    const time = fmtHeroTime(screen.total_minutes).label;
+    document.querySelectorAll('aside.right .agent').forEach((agent) => {
+      const name = agent.querySelector('.name');
+      const status = agent.querySelector('.status');
+      if (name && status && name.textContent.trim().toLowerCase() === 'pantalla') {
+        status.textContent = `contando · ${time}`;
+      }
+    });
+  }
+
+  function screenHero() {
+    return document.querySelector('.hero[aria-label="Pantalla hoy PC"], .hero[aria-label="Pantalla hoy celular"], .hero[aria-label="Pantalla hoy"]');
+  }
+
+  function setScreenLabel(text) {
+    const label = document.getElementById('screen-source-label') || (screenHero() && screenHero().querySelector('.label'));
+    if (label) label.textContent = text;
+  }
+
+  function phoneFileName() {
+    return sessionStorage.getItem(PHONE_FILE_KEY);
+  }
+
+  function setPhoneWarning(on, message) {
+    const box = document.getElementById('phone-shot');
+    const sub = document.getElementById('phone-shot-sub');
+    const warning = document.getElementById('phone-shot-warning');
+    if (box) box.classList.toggle('warn', !!on);
+    if (warning) {
+      warning.textContent = message || 'Advertencia: no puedes cambiar a datos del celular sin subir primero la captura de Screen Time.';
+    }
+    if (on && sub) {
+      sub.textContent = 'Captura requerida para activar datos del celular.';
+    }
+  }
+
+  function clearWaveForPhone(fileName) {
+    const hero = screenHero();
+    const wave = document.getElementById('wave');
+    const axis = hero && hero.querySelector('.wave-axis');
+    if (wave) {
+      wave.innerHTML = `<div class="phone-wave-placeholder">Captura subida: ${escapeHTML(fileName)}. Pendiente de lectura por visión.</div>`;
+    }
+    if (axis) axis.innerHTML = '';
+  }
+
+  function renderPcScreen(screen) {
+    const hero = screenHero();
+    if (!hero || !screen) return;
+    hero.dataset.screenSource = 'pc';
+    hero.setAttribute('aria-label', 'Pantalla hoy PC');
+    setScreenLabel('Pantalla hoy PC');
+    const toggle = document.getElementById('screen-source-toggle');
+    if (toggle) toggle.textContent = 'Datos pantalla celular';
+
+    const t = fmtHeroTime(screen.total_minutes);
+    const target = fmtHeroTime(screen.target_minutes);
+    const hEl = hero.querySelector('#hours');
+    const mEl = hero.querySelector('#mins');
+    const unit = hero.querySelector('.unit');
+    if (hEl) hEl.textContent = String(t.hours);
+    if (mEl) mEl.textContent = String(t.mins).padStart(2, '0');
+    if (unit) unit.textContent = `de ${target.hours}h objetivo`;
+
+    const delta = hero.querySelector('.sub .delta');
+    if (delta) {
+      delta.classList.toggle('up', screen.delta_direction === 'up');
+      delta.classList.toggle('down', screen.delta_direction !== 'up');
+      const svg = delta.querySelector('svg');
+      delta.textContent = screen.delta_label || 'sin comparación con ayer';
+      if (svg) delta.prepend(svg);
+    }
+    const status = hero.querySelector('.sub span[style*="var(--muted)"]');
+    if (status) status.textContent = screen.status || 'Datos actualizados';
+    renderScreenWave(screen.hourly || []);
+    updateRightPanelScreen(screen);
+  }
+
+  function renderPhoneScreen() {
+    const hero = screenHero();
+    const fileName = phoneFileName();
+    const input = document.getElementById('phone-shot-input');
+    if (!fileName) {
+      setPhoneWarning(true);
+      showToast('Primero sube la captura de Screen Time del celular.', 3000);
+      if (input) input.click();
+      return false;
+    }
+    if (!hero) return false;
+    setPhoneWarning(false);
+
+    sessionStorage.setItem(SCREEN_SOURCE_KEY, 'phone');
+    hero.dataset.screenSource = 'phone';
+    hero.setAttribute('aria-label', 'Pantalla hoy celular');
+    setScreenLabel('Pantalla hoy celular');
+    const toggle = document.getElementById('screen-source-toggle');
+    if (toggle) toggle.textContent = 'Ver datos pantalla PC';
+
+    const hEl = hero.querySelector('#hours');
+    const mEl = hero.querySelector('#mins');
+    const unit = hero.querySelector('.unit');
+    if (hEl) hEl.textContent = '—';
+    if (mEl) mEl.textContent = '—';
+    if (unit) unit.textContent = 'captura subida';
+
+    const delta = hero.querySelector('.sub .delta');
+    if (delta) {
+      const svg = delta.querySelector('svg');
+      delta.classList.remove('down', 'up');
+      delta.textContent = 'Screen Time pendiente de lectura';
+      if (svg) delta.prepend(svg);
+    }
+    const status = hero.querySelector('.sub span[style*="var(--muted)"]');
+    if (status) status.textContent = `Archivo: ${fileName}`;
+    clearWaveForPhone(fileName);
+    return true;
+  }
+
+  function renderCurrentScreenSource() {
+    if (sessionStorage.getItem(SCREEN_SOURCE_KEY) === 'phone') {
+      if (!phoneFileName()) {
+        sessionStorage.setItem(SCREEN_SOURCE_KEY, 'pc');
+        setPhoneWarning(false);
+        if (latestPcScreen) renderPcScreen(latestPcScreen);
+        return false;
+      }
+      return renderPhoneScreen();
+    }
+    if (latestPcScreen) renderPcScreen(latestPcScreen);
+    return true;
+  }
+
+  function setupScreenSourceToggle() {
+    const toggle = document.getElementById('screen-source-toggle');
+    if (!toggle || toggle.dataset.kairosBound === '1') return;
+    toggle.dataset.kairosBound = '1';
+    toggle.addEventListener('click', () => {
+      const mode = sessionStorage.getItem(SCREEN_SOURCE_KEY) || 'pc';
+      if (mode === 'phone') {
+        sessionStorage.setItem(SCREEN_SOURCE_KEY, 'pc');
+        if (latestPcScreen) renderPcScreen(latestPcScreen);
+        else updateDashboardScreen();
+        setPhoneWarning(false);
+        return;
+      }
+      renderPhoneScreen();
+    });
+  }
+
+  function setupPhoneScreenshotPrompt() {
+    const input = document.getElementById('phone-shot-input');
+    const sub = document.getElementById('phone-shot-sub');
+    if (!input || input.dataset.kairosBound === '1') return;
+    input.dataset.kairosBound = '1';
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file || !sub) return;
+      sessionStorage.setItem(PHONE_FILE_KEY, file.name);
+      setPhoneWarning(false);
+      sub.textContent = `Captura lista: ${file.name}. Falta conectarla al módulo de visión.`;
+      if (sessionStorage.getItem(SCREEN_SOURCE_KEY) === 'phone') renderPhoneScreen();
+    });
+    const saved = phoneFileName();
+    if (saved && sub) sub.textContent = `Captura lista: ${saved}. Falta conectarla al módulo de visión.`;
+  }
+
+  async function updateDashboardScreen() {
+    const p = profile();
+    if (!p || !p.id) return;
+    const hero = screenHero();
+    if (!hero) return;
+    try {
+      const tzOffset = new Date().getTimezoneOffset();
+      const r = await api(`/digital/${p.id}/dashboard?tz_offset_min=${tzOffset}&target_minutes=240`);
+      const screen = r.screen;
+      if (!screen) return;
+      latestPcScreen = screen;
+      renderCurrentScreenSource();
+    } catch (e) {
+      // El dashboard debe seguir usable aunque el API local no esté prendido.
+      console.debug('[kairosDigital] no pude actualizar Pantalla hoy', e);
+    }
+  }
 
   // ─── Render ───────────────────────────────────────────────
   function renderEmpty(body, msg) {
@@ -405,6 +644,7 @@
       return;
     }
     renderMetric(body, metricRow);
+    updateDashboardScreen();
 
     const recsBox = document.getElementById('kd-recs');
     if (recsBox) {
@@ -474,7 +714,11 @@
   overlay.addEventListener('click', close);
   panel.querySelector('.kd-close').addEventListener('click', close);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  setupScreenSourceToggle();
+  setupPhoneScreenshotPrompt();
+  setTimeout(updateDashboardScreen, 800);
+  setInterval(updateDashboardScreen, 60000);
 
   // Exponer para debugging
-  window.kairosDigital = { open, close, reload: loadAll };
+  window.kairosDigital = { open, close, reload: loadAll, updateDashboardScreen };
 })();

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections import Counter
+from datetime import datetime, time, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
@@ -16,7 +18,6 @@ from agents import (
 )
 from assessments import ASSESSMENTS, profile_context_summary, score_assessment
 from core import core_reply, core_synthesis
-from datetime import datetime, timezone
 
 from digital import compute_daily_metric, metric_summary_for_llm
 from recommender import RecommenderError, generate_recommendations
@@ -584,6 +585,157 @@ async def digital_history(profile_id: str, days: int = 14) -> Dict[str, Any]:
     except Exception as e:  # noqa: BLE001
         return {"history": [], "error": str(e)}
     return {"history": history}
+
+
+def _parse_dt(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
+    except ValueError:
+        return None
+
+
+def _local_day_bounds(tz_offset_min: int, days_ago: int = 0) -> tuple:
+    """JS getTimezoneOffset: UTC - local. Colombia/Mac suele ser 300."""
+    now_local = datetime.now(timezone.utc) - timedelta(minutes=tz_offset_min)
+    target_date = now_local.date() - timedelta(days=days_ago)
+    local_midnight = datetime.combine(target_date, time.min, tzinfo=timezone.utc)
+    start_utc = local_midnight + timedelta(minutes=tz_offset_min)
+    return start_utc, start_utc + timedelta(days=1), target_date.isoformat()
+
+
+def _session_minutes(session: Dict[str, Any]) -> int:
+    seconds = int(session.get("duration_sec") or 0)
+    if session.get("active") is False:
+        seconds = seconds // 2
+    return max(0, round(seconds / 60))
+
+
+def _hourly_buckets(
+    sessions: List[Dict[str, Any]],
+    day_iso: str,
+    tz_offset_min: int,
+) -> List[Dict[str, Any]]:
+    local_day = datetime.fromisoformat(day_iso).date()
+    bucket_hours = list(range(8, 23))
+    seconds_by_hour = {h: 0.0 for h in bucket_hours}
+
+    for s in sessions:
+        start_utc = _parse_dt(s.get("started_at"))
+        if not start_utc:
+            continue
+        end_utc = _parse_dt(s.get("ended_at"))
+        if not end_utc:
+            end_utc = start_utc + timedelta(seconds=int(s.get("duration_sec") or 0))
+        if end_utc <= start_utc:
+            continue
+        # Convertimos a "hora local" usando el offset del navegador, pero
+        # mantenemos timezone UTC para poder comparar datetimes sin mezclar tz.
+        start_local = start_utc - timedelta(minutes=tz_offset_min)
+        end_local = end_utc - timedelta(minutes=tz_offset_min)
+        weight = 0.5 if s.get("active") is False else 1.0
+
+        for hour in bucket_hours:
+            b0 = datetime.combine(local_day, time(hour), tzinfo=timezone.utc)
+            b1 = b0 + timedelta(hours=1)
+            overlap = max(0.0, (min(end_local, b1) - max(start_local, b0)).total_seconds())
+            if overlap:
+                seconds_by_hour[hour] += overlap * weight
+
+    max_minutes = max(60, *(round(v / 60) for v in seconds_by_hour.values()))
+    return [
+        {
+            "hour": h,
+            "label": f"{h}h",
+            "minutes": round(seconds_by_hour[h] / 60),
+            "ratio": round(min(1.0, (seconds_by_hour[h] / 60) / max_minutes), 3),
+        }
+        for h in bucket_hours
+    ]
+
+
+def _screen_dashboard_payload(
+    today_sessions: List[Dict[str, Any]],
+    yesterday_sessions: List[Dict[str, Any]],
+    day_iso: str,
+    tz_offset_min: int,
+    target_minutes: int,
+) -> Dict[str, Any]:
+    total_today = sum(_session_minutes(s) for s in today_sessions)
+    total_yesterday = sum(_session_minutes(s) for s in yesterday_sessions)
+    delta = total_today - total_yesterday
+    domain_minutes: Counter = Counter()
+    for s in today_sessions:
+        domain = s.get("domain") or "otro"
+        domain_minutes[domain] += _session_minutes(s)
+    top_domains = [
+        {"domain": d, "minutes": m} for d, m in domain_minutes.most_common(5) if m > 0
+    ]
+    if total_today <= target_minutes:
+        status = "Vas por buen camino"
+    elif total_today <= target_minutes + 30:
+        status = "Cerca del objetivo"
+    else:
+        status = "Conviene bajar el ritmo"
+    return {
+        "date": day_iso,
+        "target_minutes": target_minutes,
+        "total_minutes": total_today,
+        "delta_minutes": delta,
+        "delta_label": (
+            "igual que ayer"
+            if delta == 0
+            else f"{abs(delta)}m {'más' if delta > 0 else 'menos'} que ayer"
+        ),
+        "delta_direction": "up" if delta > 0 else "down" if delta < 0 else "flat",
+        "status": status,
+        "hourly": _hourly_buckets(today_sessions, day_iso, tz_offset_min),
+        "top_domains": top_domains,
+    }
+
+
+@app.get("/digital/{profile_id}/dashboard")
+async def digital_dashboard(
+    profile_id: str,
+    tz_offset_min: int = 0,
+    target_minutes: int = 240,
+) -> Dict[str, Any]:
+    """Resumen para la tarjeta 'Pantalla hoy' del dashboard.
+
+    Usa sesiones crudas de la extensión para total del día local, delta vs ayer
+    y buckets 8h-22h. `tz_offset_min` viene de JS getTimezoneOffset().
+    """
+    start_today, end_today, day_iso = _local_day_bounds(tz_offset_min)
+    start_yesterday, _, _ = _local_day_bounds(tz_offset_min, days_ago=1)
+    try:
+        today_sessions, yesterday_sessions = await asyncio.gather(
+            asyncio.to_thread(
+                dbmod.fetch_sessions_between,
+                profile_id,
+                start_today.isoformat(),
+                end_today.isoformat(),
+            ),
+            asyncio.to_thread(
+                dbmod.fetch_sessions_between,
+                profile_id,
+                start_yesterday.isoformat(),
+                start_today.isoformat(),
+            ),
+        )
+    except Exception as e:  # noqa: BLE001
+        return {"screen": None, "error": str(e)}
+    return {
+        "screen": _screen_dashboard_payload(
+            today_sessions,
+            yesterday_sessions,
+            day_iso,
+            tz_offset_min,
+            max(1, min(1440, target_minutes)),
+        )
+    }
 
 
 # ─────────── Recomendaciones generadas por LLM ───────────
