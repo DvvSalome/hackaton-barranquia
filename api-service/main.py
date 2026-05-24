@@ -30,8 +30,10 @@ import asyncio
 import json
 from typing import Any, Dict, List, Optional
 
+from pathlib import Path
+
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -49,6 +51,7 @@ from digital import compute_daily_metric, metric_summary_for_llm
 from ml_tool import predict_wellbeing
 from orchestrator import synthesize
 from specialists import SPECIALIST_DEFINITIONS, run_specialist
+from knowledge_base import get_kb_status, reload_agent, KNOWLEDGE_DIR
 from langchain_tools import run_diagnostic_pipeline
 import triage_history as th
 
@@ -162,6 +165,60 @@ async def specialist_endpoint(kind: str, body: Dict[str, Any]) -> Dict[str, Any]
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result
+
+
+# ─── Knowledge base management ───────────────────────────────────────────────
+
+@app.get("/knowledge")
+async def knowledge_status() -> Dict[str, Any]:
+    """List all documents loaded per agent and index stats."""
+    return get_kb_status()
+
+
+@app.post("/knowledge/{agent_id}/reload")
+async def knowledge_reload(agent_id: str) -> Dict[str, Any]:
+    """Hot-reload documents for a specific agent without restarting the server."""
+    return reload_agent(agent_id)
+
+
+@app.post("/knowledge/reload-all")
+async def knowledge_reload_all() -> Dict[str, Any]:
+    """Hot-reload all agents knowledge bases."""
+    from knowledge_base import AGENT_IDS
+    results = {aid: reload_agent(aid) for aid in AGENT_IDS}
+    return {"reloaded": results}
+
+
+@app.post("/knowledge/{agent_id}/upload")
+async def knowledge_upload(
+    agent_id: str,
+    file: "UploadFile",
+) -> Dict[str, Any]:
+    """Upload a document to an agent's knowledge base and auto-reload."""
+    from fastapi import UploadFile
+    allowed = {".pdf", ".docx", ".doc", ".txt", ".md"}
+    ext = Path(file.filename).suffix.lower()
+    if ext not in allowed:
+        raise HTTPException(400, f"Formato no soportado: {ext}. Usa: {', '.join(allowed)}")
+
+    agent_dir = KNOWLEDGE_DIR / agent_id
+    agent_dir.mkdir(parents=True, exist_ok=True)
+    dest = agent_dir / file.filename
+    dest.write_bytes(await file.read())
+
+    result = reload_agent(agent_id)
+    return {"uploaded": file.filename, "agent": agent_id, **result}
+
+
+@app.delete("/knowledge/{agent_id}/{filename}")
+async def knowledge_delete(agent_id: str, filename: str) -> Dict[str, Any]:
+    """Delete a document from an agent's knowledge base and auto-reload."""
+    target = KNOWLEDGE_DIR / agent_id / filename
+    if not target.exists():
+        raise HTTPException(404, f"Archivo '{filename}' no encontrado en agente '{agent_id}'")
+    target.unlink()
+    result = reload_agent(agent_id)
+    return {"deleted": filename, "agent": agent_id, **result}
 
 
 # ─── Dynamic agent question generator ────────────────────────────────────────

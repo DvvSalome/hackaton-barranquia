@@ -15,6 +15,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
+from knowledge_base import get_agent_context
 
 
 SPECIALIST_DEFINITIONS: dict[str, dict[str, str]] = {
@@ -62,6 +63,8 @@ Eres el consultor especialista "{name}" de Kairós, un copiloto de bienestar dig
 
 Tu único foco de análisis: {focus}.
 
+{knowledge_block}
+
 Recibirás un bloque de contexto con:
 - Texto libre del día del usuario (respuestas al check-in)
 - Señales de computer vision (postura, somnolencia, distracciones detectadas por cámara)
@@ -95,34 +98,6 @@ Reglas estrictas:
 """
 
 
-def _make_chain(kind: str) -> Any:
-    spec = SPECIALIST_DEFINITIONS[kind]
-    llm = ChatOpenAI(
-        api_key=OPENROUTER_API_KEY,
-        base_url=OPENROUTER_BASE_URL,
-        model=OPENROUTER_MODEL,
-        temperature=0.3,
-        max_tokens=600,
-        default_headers={
-            "HTTP-Referer": "https://kairos.local",
-            "X-Title": "Kairos-Specialist",
-        },
-    )
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SPECIALIST_SYSTEM.format(name=spec["name"], focus=spec["focus"])),
-        ("human", "{context}"),
-    ])
-    return prompt | llm | StrOutputParser()
-
-
-# Lazy-loaded chains cache
-_chains: dict[str, Any] = {}
-
-
-def get_chain(kind: str) -> Any:
-    if kind not in _chains:
-        _chains[kind] = _make_chain(kind)
-    return _chains[kind]
 
 
 def _extract_json(raw: str) -> str:
@@ -153,7 +128,29 @@ async def run_specialist(kind: str, context: str) -> dict[str, Any]:
     if kind not in SPECIALIST_DEFINITIONS:
         raise ValueError(f"specialist desconocido: {kind}")
 
-    chain = get_chain(kind)
+    # Inject relevant knowledge chunks into the system prompt
+    kb_context = get_agent_context(kind, context)
+    knowledge_block = (
+        f"Conocimiento de referencia (usa solo si es relevante):\n{kb_context}"
+        if kb_context else ""
+    )
+    spec = SPECIALIST_DEFINITIONS[kind]
+    llm = ChatOpenAI(
+        api_key=OPENROUTER_API_KEY,
+        base_url=OPENROUTER_BASE_URL,
+        model=OPENROUTER_MODEL,
+        temperature=0.3,
+        max_tokens=600,
+        default_headers={"HTTP-Referer": "https://kairos.local", "X-Title": "Kairos-Specialist"},
+    )
+    system_prompt = SPECIALIST_SYSTEM.format(
+        name=spec["name"], focus=spec["focus"], knowledge_block=knowledge_block
+    )
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "{context}"),
+    ])
+    chain = prompt | llm | StrOutputParser()
     raw = await chain.ainvoke({"context": context})
     cleaned = _extract_json(raw)
 

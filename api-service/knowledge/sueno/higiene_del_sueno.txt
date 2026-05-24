@@ -1,0 +1,38 @@
+GUÍA DE HIGIENE DEL SUEÑO — Referencia clínica
+
+## Duración recomendada
+- Adultos (18-64 años): 7-9 horas (National Sleep Foundation, 2023)
+- Adultos mayores (65+): 7-8 horas
+- Adolescentes (14-17): 8-10 horas
+
+## Fases del sueño y su importancia
+El sueño se divide en ciclos de ~90 minutos con 4 fases:
+1. N1 (sueño ligero): transición vigilia-sueño, 5% del tiempo total
+2. N2 (sueño intermedio): consolidación de memoria motora, 50% del tiempo
+3. N3 (sueño profundo/delta): restauración física, sistema inmune, hormona de crecimiento
+4. REM: consolidación de memoria emocional y declarativa, sueños vívidos
+
+## Factores que deterioran el sueño
+- Cafeína: vida media 5-7 horas. Evitar después de las 14:00
+- Alcohol: fragmenta el sueño REM, produce rebote en la segunda mitad de la noche
+- Luz azul (450-495 nm): suprime la melatonina hasta 3 horas. Evitar pantallas 90 min antes de dormir
+- Temperatura: el sueño óptimo ocurre con temperatura corporal en descenso. Habitación: 16-19°C
+- Irregularidad de horarios: el jet lag social (diferencia finde/semana >2h) eleva el riesgo cardiovascular y metabólico
+
+## Higiene del sueño — protocolo básico
+1. Horario fijo: misma hora de acostarse y levantarse 7 días/semana
+2. Ritual de 30 min: actividades de baja estimulación (lectura, ducha tibia, respiración)
+3. Oscuridad total: las máscaras reducen el despertar en un 30%
+4. Sin pantallas 90 min antes: o usar filtro de luz azul (f.lux, Night Shift)
+5. Evitar comidas pesadas 3 horas antes
+6. Actividad física: mejora el sueño profundo, pero no realizar >2h antes de dormir
+
+## Trastornos comunes
+- Insomnio: dificultad para iniciar o mantener el sueño >3 noches/semana por >3 meses
+- Apnea obstructiva: ronquidos, microdespertares, somnolencia diurna
+- Síndrome de fase retrasada: incapacidad de dormirse antes de las 2-4 AM
+
+## Melatonina
+- Producción natural: comienza 2h antes de dormir habitual
+- Suplemento: 0.5-1 mg es suficiente; dosis altas (5-10 mg) no son más efectivas
+- Indicación: desfase de zona horaria, no como hipnótico habitual
