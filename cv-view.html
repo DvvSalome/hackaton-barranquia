@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Kairós — Computer Vision</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #070b14;
+    --surface: #0d1322;
+    --border: rgba(99,179,237,.15);
+    --accent: #6366f1;
+    --accent2: #22d3ee;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+  .header h1 { font-size: 16px; font-weight: 600; }
+  .header h1 span { color: var(--accent2); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); margin-left: auto; }
+  .status-dot.live { background: var(--ok); box-shadow: 0 0 8px var(--ok); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .status-label { font-size: 12px; color: var(--muted); }
+  .status-dot.live + .status-label { color: var(--ok); }
+
+  /* ── Layout ── */
+  .main { display: flex; gap: 0; flex: 1; overflow: hidden; }
+
+  /* ── Camera panel ── */
+  .cam-panel {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity .4s; }
+  #video.ready { opacity: 1; }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* ── HUD badges ── */
+  .hud {
+    position: absolute;
+    top: 16px; left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(7,11,20,.7);
+    transition: all .3s;
+  }
+  .badge-icon { font-size: 14px; }
+  .badge.ok   { border-color: rgba(52,211,153,.4); color: var(--ok); }
+  .badge.warn { border-color: rgba(251,191,36,.4);  color: var(--warn); }
+  .badge.danger { border-color: rgba(248,113,113,.4); color: var(--danger); }
+
+  /* ── Focus ring ── */
+  .focus-ring {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 80px; height: 80px;
+    pointer-events: none;
+  }
+  .focus-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .focus-ring .track { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 5; }
+  .focus-ring .fill  { fill: none; stroke: var(--accent2); stroke-width: 5; stroke-linecap: round;
+    stroke-dasharray: 220; stroke-dashoffset: 220; transition: stroke-dashoffset 1s ease, stroke .4s; }
+  .focus-ring .label { font-size: 10px; fill: var(--text); text-anchor: middle; dominant-baseline: middle; font-family: var(--font); font-weight: 600; }
+
+  /* ── No camera ── */
+  .no-cam {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    position: absolute; inset: 0; background: var(--bg);
+    justify-content: center; z-index: 5;
+  }
+  .no-cam h2 { font-size: 18px; }
+  .no-cam p  { color: var(--muted); font-size: 14px; text-align: center; max-width: 320px; }
+  .btn-start {
+    padding: 12px 28px; border-radius: 12px; border: none;
+    background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: transform .15s, box-shadow .15s;
+  }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,.4); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 340px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1; padding: 12px 8px; text-align: center;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    cursor: pointer; border: none; background: none;
+    border-bottom: 2px solid transparent; transition: all .2s;
+  }
+  .tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .tab-content { flex: 1; overflow-y: auto; padding: 16px; display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Signal cards ── */
+  .sig-group { margin-bottom: 20px; }
+  .sig-group h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 10px; }
+  .sig-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 12px; border-radius: 10px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.05);
+    margin-bottom: 6px; font-size: 13px;
+  }
+  .sig-key { color: var(--muted); }
+  .sig-val { font-weight: 600; font-size: 13px; }
+  .sig-val.ok     { color: var(--ok); }
+  .sig-val.warn   { color: var(--warn); }
+  .sig-val.danger { color: var(--danger); }
+  .sig-val.neutral { color: var(--text); }
+
+  /* ── Object tags ── */
+  .obj-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .obj-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    border: 1px solid rgba(99,179,237,.3); background: rgba(99,179,237,.08); color: var(--accent2);
+  }
+  .obj-tag .conf { opacity: .6; font-weight: 400; }
+
+  /* ── Score bar ── */
+  .score-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.06); margin-top: 6px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 3px; transition: width .6s ease; background: var(--accent); }
+  .score-fill.ok { background: var(--ok); }
+  .score-fill.warn { background: var(--warn); }
+  .score-fill.danger { background: var(--danger); }
+
+  /* ── Alert log ── */
+  .alert-log { display: flex; flex-direction: column; gap: 8px; }
+  .alert-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 12px; border-radius: 10px;
+    background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05);
+    font-size: 12px; animation: slideIn .2s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
+  .alert-item .alert-time { color: var(--muted); flex-shrink: 0; font-size: 11px; }
+  .alert-item.danger { border-color: rgba(248,113,113,.25); background: rgba(248,113,113,.06); }
+  .alert-item.warn   { border-color: rgba(251,191,36,.25);  background: rgba(251,191,36,.06); }
+  .alert-item.ok     { border-color: rgba(52,211,153,.25);  background: rgba(52,211,153,.06); }
+
+  /* ── Footer ── */
+  .footer {
+    padding: 10px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12px; color: var(--muted);
+  }
+  .footer select {
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 5px 10px; font-size: 12px;
+  }
+  #fps-counter { margin-left: auto; }
+  #inference-time { }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">K</div>
+  <h1>Kairós <span>Computer Vision</span></h1>
+  <div class="status-dot" id="statusDot"></div>
+  <span class="status-label" id="statusLabel">Desconectado</span>
+</div>
+
+<div class="main">
+
+  <!-- ── Camera + Canvas ── -->
+  <div class="cam-panel">
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="overlay"></canvas>
+
+    <!-- HUD badges -->
+    <div class="hud" id="hud">
+      <div class="badge" id="badge-face">👤 Sin cara detectada</div>
+      <div class="badge" id="badge-eyes">👁️ —</div>
+      <div class="badge" id="badge-gaze">🎯 —</div>
+      <div class="badge" id="badge-gesture">✋ —</div>
+      <div class="badge" id="badge-posture">🪑 —</div>
+    </div>
+
+    <!-- Focus ring -->
+    <div class="focus-ring">
+      <svg viewBox="0 0 80 80">
+        <circle class="track" cx="40" cy="40" r="35"/>
+        <circle class="fill" id="focusRing" cx="40" cy="40" r="35"/>
+        <text class="label" x="40" y="40" id="focusLabel">—</text>
+      </svg>
+    </div>
+
+    <!-- No camera overlay -->
+    <div class="no-cam" id="noCam">
+      <div style="font-size:48px">📷</div>
+      <h2>Activar cámara</h2>
+      <p>Kairós analizará tu postura, gestos, somnolencia y entorno en tiempo real.</p>
+      <button class="btn-start" id="btnStart">Iniciar análisis</button>
+    </div>
+  </div>
+
+  <!-- ── Sidebar ── -->
+  <div class="sidebar">
+    <div class="sidebar-tabs">
+      <button class="tab active" data-tab="signals">Señales</button>
+      <button class="tab" data-tab="objects">Objetos</button>
+      <button class="tab" data-tab="log">Registro</button>
+    </div>
+
+    <!-- Signals tab -->
+    <div class="tab-content active" id="tab-signals">
+      <div class="sig-group">
+        <h3>Cara &amp; Ojos</h3>
+        <div class="sig-row"><span class="sig-key">Caras detectadas</span><span class="sig-val neutral" id="s-faces">—</span></div>
+        <div class="sig-row"><span class="sig-key">Apertura ocular</span><span class="sig-val neutral" id="s-ear">—</span></div>
+        <div class="sig-row"><span class="sig-key">Somnolencia</span><span class="sig-val neutral" id="s-drowsy">—</span></div>
+        <div class="sig-row"><span class="sig-key">Mirando pantalla</span><span class="sig-val neutral" id="s-gaze">—</span></div>
+        <div class="sig-row"><span class="sig-key">Boca abierta</span><span class="sig-val neutral" id="s-mouth">—</span></div>
+      </div>
+
+      <div class="sig-group">
+        <h3>Gestos &amp; Postura</h3>
+        <div class="sig-row"><span class="sig-key">Gesto dominante</span><span class="sig-val neutral" id="s-gesture">—</span></div>
+        <div class="sig-row"><span class="sig-key">Postura</span><span class="sig-val neutral" id="s-posture">—</span></div>
+        <div class="sig-row"><span class="sig-key">Señales de estrés</span><span class="sig-val neutral" id="s-stress">—</span></div>
+      </div>
+
+      <div class="sig-group">
+        <h3>Entorno</h3>
+        <div class="sig-row"><span class="sig-key">Personas</span><span class="sig-val neutral" id="s-persons">—</span></div>
+        <div class="sig-row"><span class="sig-key">Contexto</span><span class="sig-val neutral" id="s-env">—</span></div>
+      </div>
+
+      <div class="sig-group">
+        <h3>Puntuación de bienestar</h3>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Foco estimado</div>
+        <div class="score-bar"><div class="score-fill" id="bar-focus" style="width:0%"></div></div>
+        <div style="font-size:13px;color:var(--muted);margin:10px 0 8px">Alerta</div>
+        <div class="score-bar"><div class="score-fill" id="bar-alert" style="width:0%"></div></div>
+        <div style="font-size:13px;color:var(--muted);margin:10px 0 8px">Postura</div>
+        <div class="score-bar"><div class="score-fill" id="bar-posture" style="width:0%"></div></div>
+      </div>
+
+      <div class="sig-group" id="ml-group" style="display:none">
+        <h3>Predicción ML — Bienestar</h3>
+        <div class="sig-row"><span class="sig-key">Nivel de riesgo</span><span class="sig-val neutral" id="ml-risk">—</span></div>
+        <div class="sig-row"><span class="sig-key">Confianza</span><span class="sig-val neutral" id="ml-conf">—</span></div>
+        <div class="sig-row"><span class="sig-key">Ojo (apertura)</span><span class="sig-val neutral" id="ml-eye">—</span></div>
+        <div class="sig-row"><span class="sig-key">Pantalla hoy</span><span class="sig-val neutral" id="ml-screen">—</span></div>
+      </div>
+    </div>
+
+    <!-- Objects tab -->
+    <div class="tab-content" id="tab-objects">
+      <div class="sig-group">
+        <h3>Objetos detectados — YOLOv8n (80 clases COCO)</h3>
+        <div class="obj-list" id="obj-list">
+          <span style="color:var(--muted);font-size:13px">Esperando frame...</span>
+        </div>
+      </div>
+      <div class="sig-group" style="margin-top:20px">
+        <h3>Alertas de bienestar</h3>
+        <div id="wellness-alerts" style="color:var(--muted);font-size:13px">Sin alertas</div>
+      </div>
+      <div class="sig-group" style="margin-top:20px">
+        <h3>Señales positivas</h3>
+        <div id="positive-signals" style="color:var(--muted);font-size:13px">Sin señales</div>
+      </div>
+    </div>
+
+    <!-- Log tab -->
+    <div class="tab-content" id="tab-log">
+      <div class="alert-log" id="alert-log">
+        <div style="color:var(--muted);font-size:13px">El registro aparecerá aquí...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Modo:</span>
+  <select id="modeSelect">
+    <option value="cv">Solo CV (8002)</option>
+    <option value="ml">CV + ML (8010)</option>
+  </select>
+  <span>Intervalo:</span>
+  <select id="intervalSel">
+    <option value="1000">1s</option>
+    <option value="2000" selected>2s</option>
+    <option value="3000">3s</option>
+    <option value="5000">5s</option>
+  </select>
+  <span id="inference-time" style="color:var(--accent2)"></span>
+  <span id="fps-counter"></span>
+</div>
+
+<script type="module">
+// ────────────────────────────────────────────────────────────────────────────
+// Kairós CV View — rich visualization of cv-service output
+// ────────────────────────────────────────────────────────────────────────────
+
+const MODE = () => document.getElementById('modeSelect').value;
+const INTERVAL = () => parseInt(document.getElementById('intervalSel').value);
+const API_CV_URL = 'http://localhost:8010/cv/analyze-and-predict';
+const CV_DIRECT_URL = 'http://localhost:8002/cv/analyze/b64';
+
+document.getElementById('modeSelect').addEventListener('change', () => {
+  const isML = MODE() === 'ml';
+  document.getElementById('ml-group').style.display = isML ? '' : 'none';
+});
+
+const video    = document.getElementById('video');
+const canvas   = document.getElementById('overlay');
+const ctx      = canvas.getContext('2d');
+const noCam    = document.getElementById('noCam');
+const btnStart = document.getElementById('btnStart');
+const statusDot   = document.getElementById('statusDot');
+const statusLabel = document.getElementById('statusLabel');
+
+let stream = null;
+let loopTimer = null;
+let lastResult = null;
+let frameCount = 0;
+let lastFpsTs = Date.now();
+
+// ── Object colors (per COCO category group) ──────────────────────────────────
+const LABEL_COLORS = {
+  person: '#f87171',
+  // animals
+  cat:'#fb923c', dog:'#fb923c', bird:'#fb923c', horse:'#fb923c',
+  // vehicles
+  car:'#fbbf24', truck:'#fbbf24', bus:'#fbbf24', bicycle:'#fbbf24', motorcycle:'#fbbf24',
+  // electronics
+  laptop:'#34d399', keyboard:'#34d399', mouse:'#34d399', tv:'#34d399', 'cell phone':'#34d399',
+  // furniture
+  chair:'#60a5fa', couch:'#60a5fa', bed:'#60a5fa',
+  // food
+  pizza:'#a78bfa', sandwich:'#a78bfa', apple:'#a78bfa', banana:'#a78bfa',
+};
+function labelColor(label) { return LABEL_COLORS[label] || '#94a3b8'; }
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Start camera ──────────────────────────────────────────────────────────────
+btnStart.addEventListener('click', startCamera);
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
+    });
+    video.srcObject = stream;
+    await video.play();
+    video.classList.add('ready');
+    noCam.style.display = 'none';
+    statusDot.classList.add('live');
+    statusLabel.textContent = 'En vivo';
+    resizeCanvas();
+    startLoop();
+  } catch (err) {
+    logAlert('danger', '🚫 No se pudo acceder a la cámara: ' + err.message);
+    statusLabel.textContent = 'Error de cámara';
+  }
+}
+
+// ── Canvas resize ─────────────────────────────────────────────────────────────
+function resizeCanvas() {
+  canvas.width  = video.clientWidth;
+  canvas.height = video.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+
+// ── Analysis loop ─────────────────────────────────────────────────────────────
+function startLoop() {
+  stopLoop();
+  const tick = async () => {
+    await analyzeFrame();
+    loopTimer = setTimeout(tick, INTERVAL());
+  };
+  tick();
+}
+function stopLoop() {
+  if (loopTimer) { clearTimeout(loopTimer); loopTimer = null; }
+}
+
+async function analyzeFrame() {
+  if (!stream || video.readyState < 2) return;
+  // Capture frame (mirrored back for server)
+  const offscreen = document.createElement('canvas');
+  offscreen.width  = video.videoWidth;
+  offscreen.height = video.videoHeight;
+  const offCtx = offscreen.getContext('2d');
+  offCtx.drawImage(video, 0, 0);
+  const b64 = offscreen.toDataURL('image/jpeg', 0.75);
+
+  const t0 = performance.now();
+  try {
+    const url = MODE() === 'ml' ? API_CV_URL : CV_DIRECT_URL;
+    const body = MODE() === 'ml'
+      ? { image_b64: b64 }
+      : { image_b64: b64 };
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const elapsed = Math.round(performance.now() - t0);
+    document.getElementById('inference-time').textContent = `${elapsed}ms`;
+
+    lastResult = data;
+    drawOverlays(data);
+    updateSidebar(data);
+    updateHUD(data);
+    updateFocusRing(data);
+    if (MODE() === 'ml' && data.ml_prediction) updateMLPanel(data);
+
+    frameCount++;
+    const now = Date.now();
+    if (now - lastFpsTs >= 5000) {
+      document.getElementById('fps-counter').textContent = `${(frameCount / 5).toFixed(1)} FPS`;
+      frameCount = 0; lastFpsTs = now;
+    }
+  } catch (err) {
+    logAlert('danger', '⚠️ CV error: ' + err.message);
+    document.getElementById('inference-time').textContent = 'error';
+  }
+}
+
+// ── Canvas overlays ───────────────────────────────────────────────────────────
+function drawOverlays(data) {
+  resizeCanvas();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const scaleX = canvas.width  / video.videoWidth;
+  const scaleY = canvas.height / video.videoHeight;
+  // mirror flip (video is CSS-flipped)
+  ctx.save();
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
+
+  // ── Face landmarks ────────────────────────────────────────────────────────
+  const landmarks = data.face?.face_landmarks || [];
+  const faces     = data.face?.faces || [];
+  landmarks.forEach((pts, fi) => {
+    const face = faces[fi] || {};
+    const isDrowsy = face.drowsy;
+    const isDistracted = !face.looking_at_camera;
+    const baseColor = isDrowsy ? '#f87171' : isDistracted ? '#fbbf24' : '#22d3ee';
+
+    ctx.fillStyle = baseColor + '80';
+    ctx.strokeStyle = baseColor;
+    ctx.lineWidth = 1;
+
+    pts.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x * canvas.width, p.y * canvas.height, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  });
+
+  // ── Person bounding boxes ─────────────────────────────────────────────────
+  (data.objects?.persons || []).forEach(p => drawBox(p, '#f87171', '👤 Persona', scaleX, scaleY));
+
+  // ── Object bounding boxes ─────────────────────────────────────────────────
+  (data.objects?.objects || []).slice(0, 12).forEach(obj => {
+    const color = labelColor(obj.label);
+    drawBox(obj, color, obj.label, scaleX, scaleY);
+  });
+
+  ctx.restore();
+
+  // ── Drowsiness flash overlay ──────────────────────────────────────────────
+  if (data.face?.drowsiness_detected) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(248,113,113,0.12)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Scanline animation
+    const scanY = (Date.now() / 10) % canvas.height;
+    const grad = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30);
+    grad.addColorStop(0, 'rgba(248,113,113,0)');
+    grad.addColorStop(0.5, 'rgba(248,113,113,0.2)');
+    grad.addColorStop(1, 'rgba(248,113,113,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, scanY - 30, canvas.width, 60);
+    ctx.restore();
+
+    // Re-animate next frame for smooth scan
+    requestAnimationFrame(() => { if (lastResult) drawOverlays(lastResult); });
+  }
+}
+
+function drawBox(obj, color, label, scaleX, scaleY) {
+  if (!obj.bbox) return;
+  const { x1, y1, x2, y2 } = obj.bbox;
+  const bx = x1 * scaleX, by = y1 * scaleY;
+  const bw = (x2 - x1) * scaleX, bh = (y2 - y1) * scaleY;
+
+  // Box
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bx, by, bw, bh);
+
+  // Corner accents
+  const cs = 12;
+  ctx.lineWidth = 3;
+  [[bx,by],[bx+bw,by],[bx,by+bh],[bx+bw,by+bh]].forEach(([cx,cy], i) => {
+    ctx.beginPath();
+    const dx = i % 2 === 0 ? cs : -cs;
+    const dy = i < 2 ? cs : -cs;
+    ctx.moveTo(cx, cy + dy);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx + dx, cy);
+    ctx.stroke();
+  });
+
+  // Label background
+  const conf = Math.round((obj.confidence || 0) * 100);
+  const text = `${label} ${conf}%`;
+  ctx.font = 'bold 11px Inter, system-ui';
+  const tw = ctx.measureText(text).width + 10;
+  ctx.fillStyle = color + 'dd';
+  ctx.fillRect(bx, by - 20, tw, 20);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(text, bx + 5, by - 6);
+}
+
+// ── HUD badges ────────────────────────────────────────────────────────────────
+function updateHUD(data) {
+  const face = data.face || {};
+  const ges  = data.gestures || {};
+  const obj  = data.objects || {};
+
+  const faces = face.faces || [];
+  const f0    = faces[0] || {};
+
+  setBadge('badge-face', face.face_count > 0
+    ? `👤 ${face.face_count} cara${face.face_count > 1 ? 's' : ''}`
+    : '👤 Sin cara detectada',
+    face.face_count > 0 ? 'ok' : '');
+
+  const ear = f0.eye_openness_ratio;
+  setBadge('badge-eyes', ear != null
+    ? `👁️ Apertura ${(ear * 100).toFixed(0)}%`
+    : '👁️ —',
+    ear < 0.10 ? 'danger' : ear < 0.15 ? 'warn' : 'ok');
+
+  setBadge('badge-gaze',
+    f0.looking_at_camera === true  ? '🎯 Mirando pantalla' :
+    f0.looking_at_camera === false ? '👀 Distraído' : '🎯 —',
+    f0.looking_at_camera === false ? 'warn' : 'ok');
+
+  const gest = ges.dominant_gesture;
+  setBadge('badge-gesture', gest ? `✋ ${gest}` : '✋ Sin gesto', gest ? 'ok' : '');
+
+  const pose = (ges.pose || {}).posture || '';
+  const postureMap = { erect:'✅ Erguido', slouched:'⚠️ Encorvado', unknown:'🪑 —' };
+  setBadge('badge-posture', postureMap[pose] || '🪑 —',
+    pose === 'slouched' ? 'warn' : pose === 'erect' ? 'ok' : '');
+}
+
+function setBadge(id, text, cls) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'badge' + (cls ? ' ' + cls : '');
+}
+
+// ── Focus ring ────────────────────────────────────────────────────────────────
+function updateFocusRing(data) {
+  const face = (data.face?.faces || [])[0] || {};
+  const ges  = data.gestures?.pose || {};
+  const obj  = data.objects || {};
+
+  let score = 50;
+  if (face.looking_at_camera === true)  score += 20;
+  if (face.looking_at_camera === false) score -= 20;
+  if (face.drowsy) score -= 30;
+  if ((ges.posture || '') === 'erect')    score += 10;
+  if ((ges.posture || '') === 'slouched') score -= 10;
+  if (obj.person_count === 0) score -= 10;
+  score = Math.max(0, Math.min(100, score));
+
+  const circumference = 220;
+  const offset = circumference - (score / 100) * circumference;
+  const ring = document.getElementById('focusRing');
+  ring.style.strokeDashoffset = offset;
+  ring.style.stroke = score >= 70 ? 'var(--ok)' : score >= 40 ? 'var(--warn)' : 'var(--danger)';
+  document.getElementById('focusLabel').textContent = score + '%';
+
+  // update bars
+  setBar('bar-focus', score);
+  const alertScore = face.drowsy ? 20 : (face.eye_openness_ratio || 0.2) * 200;
+  setBar('bar-alert', Math.min(100, alertScore));
+  const postureScore = ges.posture === 'erect' ? 90 : ges.posture === 'slouched' ? 30 : 60;
+  setBar('bar-posture', postureScore);
+}
+
+function setBar(id, pct) {
+  const el = document.getElementById(id);
+  el.style.width = pct + '%';
+  el.className = 'score-fill' + (pct >= 70 ? ' ok' : pct >= 40 ? ' warn' : ' danger');
+}
+
+// ── Sidebar signals ───────────────────────────────────────────────────────────
+function updateSidebar(data) {
+  const face = data.face || {};
+  const ges  = data.gestures || {};
+  const obj  = data.objects || {};
+  const ws   = data.wellness_summary || {};
+  const f0   = (face.faces || [])[0] || {};
+
+  setSig('s-faces', face.face_count ?? '—', face.face_count > 0 ? 'ok' : 'neutral');
+  const ear = f0.eye_openness_ratio;
+  setSig('s-ear', ear != null ? (ear * 100).toFixed(1) + '%' : '—',
+    ear < 0.10 ? 'danger' : ear < 0.15 ? 'warn' : 'ok');
+  setSig('s-drowsy', face.drowsiness_detected ? 'Sí' : 'No',
+    face.drowsiness_detected ? 'danger' : 'ok');
+  setSig('s-gaze', f0.looking_at_camera === true ? 'Sí' : f0.looking_at_camera === false ? 'No' : '—',
+    f0.looking_at_camera === false ? 'warn' : 'ok');
+  setSig('s-mouth', f0.mouth_open ? 'Abierta' : 'Cerrada', 'neutral');
+
+  const gesture = ges.dominant_gesture || '—';
+  setSig('s-gesture', gesture, gesture !== '—' ? 'ok' : 'neutral');
+  const pose = (ges.pose || {}).posture || '—';
+  setSig('s-posture', pose, pose === 'erect' ? 'ok' : pose === 'slouched' ? 'warn' : 'neutral');
+  const stress = ((ges.pose || {}).stress_signals || []).join(', ') || 'Ninguna';
+  setSig('s-stress', stress, stress === 'Ninguna' ? 'ok' : 'warn');
+
+  setSig('s-persons', obj.person_count ?? '—', 'neutral');
+  setSig('s-env', (obj.environment_clues || []).join(', ') || '—', 'neutral');
+
+  // Objects tab
+  const allObjs = [...(obj.persons || []), ...(obj.objects || [])];
+  const objList = document.getElementById('obj-list');
+  if (allObjs.length === 0) {
+    objList.innerHTML = '<span style="color:var(--muted);font-size:13px">Sin objetos detectados</span>';
+  } else {
+    objList.innerHTML = allObjs.map(o =>
+      `<span class="obj-tag">${o.label} <span class="conf">${Math.round((o.confidence||0)*100)}%</span></span>`
+    ).join('');
+  }
+
+  // Wellness alerts
+  const alerts = ws.wellness_alerts || [];
+  const positives = ws.positive_signals || [];
+  document.getElementById('wellness-alerts').innerHTML =
+    alerts.length ? alerts.map(a => `<div style="color:var(--danger);font-size:12px;margin-bottom:4px">⚠️ ${a}</div>`).join('') :
+    '<span style="color:var(--ok);font-size:13px">Sin alertas</span>';
+  document.getElementById('positive-signals').innerHTML =
+    positives.length ? positives.map(p => `<div style="color:var(--ok);font-size:12px;margin-bottom:4px">✅ ${p}</div>`).join('') :
+    '<span style="color:var(--muted);font-size:13px">Sin señales positivas</span>';
+
+  // Log alerts
+  if (face.drowsiness_detected) logAlert('danger', '😴 Somnolencia detectada');
+  if (face.distraction_detected) logAlert('warn', '👀 Distracción detectada');
+  const stressSignals = (ges.pose || {}).stress_signals || [];
+  stressSignals.forEach(s => logAlert('warn', '⚠️ ' + s));
+  if ((ges.pose || {}).posture === 'erect') logAlert('ok', '✅ Buena postura');
+}
+
+function setSig(id, val, cls) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = val; el.className = 'sig-val ' + cls; }
+}
+
+// ── ML prediction panel ───────────────────────────────────────────────────────
+function updateMLPanel(data) {
+  const ml = data.ml_prediction || {};
+  const summary = data.cv_risk_summary || {};
+
+  const riskEl = document.getElementById('ml-risk');
+  const risk = ml.risk_level || '—';
+  const riskCls = { bajo: 'ok', moderado: 'warn', alto: 'danger' }[risk] || 'neutral';
+  riskEl.textContent = risk.toUpperCase();
+  riskEl.className = 'sig-val ' + riskCls;
+
+  const conf = ml.confidence != null ? Math.round(ml.confidence * 100) + '%' : '—';
+  document.getElementById('ml-conf').textContent = conf;
+  document.getElementById('ml-conf').className = 'sig-val neutral';
+
+  const eyePct = summary.eye_openness_pct != null ? summary.eye_openness_pct + '%' : '—';
+  document.getElementById('ml-eye').textContent = eyePct;
+
+  const fv = ml.feature_vector || {};
+  const screenH = fv.daily_screen_hours != null ? fv.daily_screen_hours.toFixed(1) + 'h' : '—';
+  document.getElementById('ml-screen').textContent = screenH;
+
+  if (risk === 'alto') logAlert('danger', '🔴 Riesgo alto detectado por ML');
+  else if (risk === 'moderado') logAlert('warn', '🟡 Riesgo moderado detectado por ML');
+}
+
+// ── Alert log ─────────────────────────────────────────────────────────────────
+const _alertHistory = new Set();
+function logAlert(level, msg) {
+  const key = level + msg;
+  if (_alertHistory.has(key)) return;
+  _alertHistory.add(key);
+  setTimeout(() => _alertHistory.delete(key), 8000);
+
+  const log = document.getElementById('alert-log');
+  const now = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const item = document.createElement('div');
+  item.className = `alert-item ${level}`;
+  item.innerHTML = `<span class="alert-time">${now}</span><span>${msg}</span>`;
+  log.prepend(item);
+  if (log.children.length > 30) log.lastChild.remove();
+  // Clear placeholder
+  const placeholder = log.querySelector('[style*="color:var(--muted)"]');
+  if (placeholder && log.children.length > 1) placeholder.remove();
+}
+</script>
+</body>
+</html>

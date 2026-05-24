@@ -1,0 +1,14 @@
+{
+  "name": "kairos-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kairós — dashboard de hackathon (estático)",
+  "scripts": {
+    "dev": "serve -l 3000 .",
+    "start": "serve -l 3000 .",
+    "build": "echo 'static site — no build step'"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}

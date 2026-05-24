@@ -1,0 +1,14 @@
+fastapi>=0.115,<0.120
+uvicorn[standard]>=0.32,<0.40
+python-dotenv>=1.0
+pydantic>=2.9,<3
+
+# Computer Vision
+ultralytics>=8.3,<9         # YOLOv8 — object + person detection
+mediapipe>=0.10,<0.11       # Hands, Pose, Face — gesture + body
+opencv-python-headless>=4.10,<5  # image processing (headless = no GUI dep)
+Pillow>=10.0,<12            # image decode helpers
+numpy>=1.26,<2
+
+# API utils
+python-multipart>=0.0.9     # multipart form / file upload

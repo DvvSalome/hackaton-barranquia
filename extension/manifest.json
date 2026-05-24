@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Kairós Sensor",
+  "version": "0.1.0",
+  "description": "Mide tu vida digital: tiempo por sitio, búsquedas y uso en redes sociales. Inyecta esos datos como métrica al panel Kairós.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms",
+    "history",
+    "webNavigation",
+    "idle"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Kairós Sensor",
+    "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "popup.html",
+    "open_in_tab": true
+  },
+  "icons": {}
+}

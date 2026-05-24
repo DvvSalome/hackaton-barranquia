@@ -1,0 +1,35 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# ML / CV model binaries (large files — generate/download at runtime)
+cv-service/yolov8n.pt
+cv-service/models/
+api-service/ml_model/wellbeing_model.pkl
+api-service/ml_model/dass_data.csv
+
+# Node
+node_modules/
+
+# Test/temp artifacts
+.playwright-mcp/
+temp-clone/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
