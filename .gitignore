@@ -7,3 +7,9 @@ node_modules
 dist
 build
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+api-service/.venv/
+api-service/.pytest_cache/
