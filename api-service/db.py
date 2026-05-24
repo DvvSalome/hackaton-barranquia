@@ -258,3 +258,245 @@ def list_latest_assessments(profile_id: str) -> List[Dict[str, Any]]:
         .execute()
     )
     return res.data or []
+
+
+# ────────────── Digital signals (extensión) ──────────────
+def insert_browsing_sessions(
+    profile_id: Optional[str],
+    sessions: List[Dict[str, Any]],
+) -> int:
+    """Bulk insert. Devuelve cuántas filas se persistieron."""
+    if not sessions:
+        return 0
+    rows: List[Dict[str, Any]] = []
+    for s in sessions:
+        dur = int(s.get("duration_sec") or 0)
+        dom = (s.get("domain") or "").strip().lower()
+        started = s.get("started_at")
+        if not dom or dur <= 0 or not started:
+            continue
+        row = {
+            "domain": dom,
+            "url": s.get("url"),
+            "title": s.get("title"),
+            "category": s.get("category") or "other",
+            "started_at": started,
+            "ended_at": s.get("ended_at"),
+            "duration_sec": dur,
+            "active": bool(s.get("active", True)),
+            "source": s.get("source") or "extension",
+        }
+        if profile_id:
+            row["profile_id"] = profile_id
+        rows.append(row)
+    if not rows:
+        return 0
+    res = db().table("browsing_sessions").insert(rows).execute()
+    return len(res.data or [])
+
+
+def insert_search_queries(
+    profile_id: Optional[str],
+    queries: List[Dict[str, Any]],
+) -> int:
+    if not queries:
+        return 0
+    rows: List[Dict[str, Any]] = []
+    for q in queries:
+        text = (q.get("query") or "").strip()
+        ts = q.get("ts")
+        if not text or not ts:
+            continue
+        row = {
+            "engine": (q.get("engine") or "other").strip().lower(),
+            "query": text[:300],
+            "ts": ts,
+            "source": q.get("source") or "extension",
+        }
+        if profile_id:
+            row["profile_id"] = profile_id
+        rows.append(row)
+    if not rows:
+        return 0
+    res = db().table("search_queries").insert(rows).execute()
+    return len(res.data or [])
+
+
+def fetch_sessions_for_day(
+    profile_id: str, day_iso: str
+) -> List[Dict[str, Any]]:
+    res = (
+        db()
+        .table("browsing_sessions")
+        .select("domain,url,category,duration_sec,active,started_at")
+        .eq("profile_id", profile_id)
+        .gte("started_at", day_iso + "T00:00:00Z")
+        .lt("started_at", day_iso + "T23:59:59Z")
+        .limit(5000)
+        .execute()
+    )
+    return res.data or []
+
+
+def fetch_queries_for_day(
+    profile_id: str, day_iso: str
+) -> List[Dict[str, Any]]:
+    res = (
+        db()
+        .table("search_queries")
+        .select("engine,query,ts")
+        .eq("profile_id", profile_id)
+        .gte("ts", day_iso + "T00:00:00Z")
+        .lt("ts", day_iso + "T23:59:59Z")
+        .limit(2000)
+        .execute()
+    )
+    return res.data or []
+
+
+def upsert_digital_metric(
+    profile_id: str,
+    day_iso: str,
+    metric: Dict[str, Any],
+) -> Dict[str, Any]:
+    mins = metric.get("minutes_by_category", {})
+    scores = metric.get("scores", {})
+    row = {
+        "profile_id": profile_id,
+        "date": day_iso,
+        "minutes_social": mins.get("social", 0),
+        "minutes_entertainment": mins.get("entertainment", 0),
+        "minutes_news": mins.get("news", 0),
+        "minutes_work": mins.get("work", 0),
+        "minutes_education": mins.get("education", 0),
+        "minutes_shopping": mins.get("shopping", 0),
+        "minutes_search": mins.get("search", 0),
+        "minutes_ai": mins.get("ai", 0),
+        "minutes_other": mins.get("other", 0),
+        "score_social": scores.get("social"),
+        "score_focus": scores.get("focus"),
+        "score_balance": scores.get("balance"),
+        "score_digital_overall": scores.get("digital_overall"),
+        "top_domains": metric.get("top_domains", []),
+        "search_themes": metric.get("search_themes", []),
+        "context_snapshot": {
+            "total_minutes": metric.get("total_minutes", 0),
+        },
+        "computed_at": "now()",
+    }
+    res = (
+        db()
+        .table("digital_metrics")
+        .upsert(row, on_conflict="profile_id,date")
+        .execute()
+    )
+    return res.data[0] if res.data else {}
+
+
+def get_latest_digital_metric(profile_id: str) -> Optional[Dict[str, Any]]:
+    res = (
+        db()
+        .table("latest_digital_metric")
+        .select("*")
+        .eq("profile_id", profile_id)
+        .limit(1)
+        .execute()
+    )
+    return res.data[0] if res.data else None
+
+
+def list_digital_metrics(
+    profile_id: str, limit: int = 14
+) -> List[Dict[str, Any]]:
+    res = (
+        db()
+        .table("digital_metrics")
+        .select("date,score_social,score_focus,score_balance,score_digital_overall,"
+                "minutes_social,minutes_entertainment,minutes_work,minutes_education")
+        .eq("profile_id", profile_id)
+        .order("date", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return res.data or []
+
+
+# ────────────── Recomendaciones ──────────────
+def insert_recommendations(
+    profile_id: str,
+    items: List[Dict[str, Any]],
+    model: Optional[str] = None,
+    source_metrics: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    if not items:
+        return []
+    rows: List[Dict[str, Any]] = []
+    for it in items:
+        row = {
+            "profile_id": profile_id,
+            "kind": it.get("kind", "tip"),
+            "title": it.get("title"),
+            "body": it.get("body"),
+            "rationale": it.get("rationale"),
+            "score_impact": it.get("score_impact"),
+            "source_metrics": source_metrics or {},
+            "model": model,
+        }
+        if it.get("habit_proposal"):
+            row["habit_proposal"] = it["habit_proposal"]
+        rows.append(row)
+    res = db().table("recommendations").insert(rows).execute()
+    return res.data or []
+
+
+def list_recommendations(
+    profile_id: str,
+    status: Optional[str] = None,
+    limit: int = 20,
+) -> List[Dict[str, Any]]:
+    q = (
+        db()
+        .table("recommendations")
+        .select("*")
+        .eq("profile_id", profile_id)
+        .order("created_at", desc=True)
+        .limit(limit)
+    )
+    if status:
+        q = q.eq("status", status)
+    res = q.execute()
+    return res.data or []
+
+
+def update_recommendation_status(
+    rec_id: str,
+    status: str,
+    linked_habit_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    patch: Dict[str, Any] = {"status": status, "acted_at": "now()"}
+    if linked_habit_id:
+        patch["linked_habit_id"] = linked_habit_id
+    res = (
+        db()
+        .table("recommendations")
+        .update(patch)
+        .eq("id", rec_id)
+        .execute()
+    )
+    return res.data[0] if res.data else {}
+
+
+def create_habit_from_proposal(
+    profile_id: str,
+    proposal: Dict[str, Any],
+) -> Dict[str, Any]:
+    row = {
+        "profile_id": profile_id,
+        "name": proposal.get("name") or "Hábito",
+        "emoji": proposal.get("emoji") or "✨",
+        "frequency": proposal.get("frequency") or "daily",
+        "target_per_week": proposal.get("target_per_week"),
+        "description": proposal.get("trigger"),
+    }
+    res = db().table("habits").insert(row).execute()
+    return res.data[0] if res.data else {}

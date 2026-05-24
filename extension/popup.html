@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Kairós Sensor</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header class="hdr">
+    <div class="logo">K</div>
+    <div>
+      <div class="title">Kairós Sensor</div>
+      <div class="sub">Tu vida digital → métrica</div>
+    </div>
+    <label class="switch" title="Activar/desactivar tracking">
+      <input type="checkbox" id="enabled" />
+      <span></span>
+    </label>
+  </header>
+
+  <section class="card">
+    <label class="lbl" for="profileId">Profile ID (UUID o email)</label>
+    <input id="profileId" type="text" placeholder="copia el ID del dashboard…" />
+    <label class="lbl" for="apiBase">API base</label>
+    <input id="apiBase" type="text" placeholder="http://localhost:8000" />
+    <button id="save" class="btn primary">Guardar</button>
+    <div id="savedHint" class="hint"></div>
+  </section>
+
+  <section class="card stats">
+    <div class="row head">
+      <span>Categoría</span>
+      <span>Minutos hoy</span>
+    </div>
+    <div id="catList" class="cats"></div>
+    <div class="totals">
+      <span id="totalMin">0 min</span>
+      <span id="curDomain" class="cur">—</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="row head"><span>Buffer pendiente</span></div>
+    <div class="buf">
+      <span><b id="bufSessions">0</b> sesiones</span>
+      <span><b id="bufQueries">0</b> búsquedas</span>
+    </div>
+    <div class="row btns">
+      <button id="flush" class="btn primary">Enviar ahora</button>
+      <button id="clear" class="btn ghost">Vaciar buffer</button>
+    </div>
+    <div id="flushHint" class="hint"></div>
+    <div id="lastFlush" class="hint subtle"></div>
+  </section>
+
+  <footer class="ftr">
+    <span>v0.1 · solo tu navegador → tu Kairós</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

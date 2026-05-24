@@ -16,6 +16,10 @@ from agents import (
 )
 from assessments import ASSESSMENTS, profile_context_summary, score_assessment
 from core import core_reply, core_synthesis
+from datetime import datetime, timezone
+
+from digital import compute_daily_metric, metric_summary_for_llm
+from recommender import RecommenderError, generate_recommendations
 
 app = FastAPI(title="Kairós api-service", version="0.1.0")
 
@@ -101,6 +105,43 @@ class HabitLogReq(BaseModel):
     habit_id: str
     completed: bool = True
     note: Optional[str] = None
+
+
+class BrowsingSession(BaseModel):
+    domain: str
+    url: Optional[str] = None
+    title: Optional[str] = None
+    category: Optional[str] = None
+    started_at: str           # ISO 8601
+    ended_at: Optional[str] = None
+    duration_sec: int
+    active: bool = True
+    source: Optional[str] = "extension"
+
+
+class SearchEvent(BaseModel):
+    engine: str
+    query: str
+    ts: str                   # ISO 8601
+    source: Optional[str] = "extension"
+
+
+class ExtensionIngestReq(BaseModel):
+    profile_id: Optional[str] = None
+    sessions: List[BrowsingSession] = []
+    queries: List[SearchEvent] = []
+    recompute_today: bool = True
+
+
+class RecommendReq(BaseModel):
+    profile_id: str
+    include_chat_excerpt: Optional[str] = None
+    max_items: int = 5
+    save: bool = True
+
+
+class RecActionReq(BaseModel):
+    status: str               # accepted | dismissed | snoozed
 
 
 # ─────────── Health & metadata ───────────
@@ -463,3 +504,249 @@ async def onboarding_status(profile_id: str) -> Dict[str, Any]:
         "results": results,
         "context": profile_context_summary(results),
     }
+
+
+# ─────────── Extensión: ingest + métricas digitales ───────────
+def _today_iso() -> str:
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+async def _recompute_digital_metric(profile_id: str, day_iso: str) -> Dict[str, Any]:
+    sessions = await asyncio.to_thread(dbmod.fetch_sessions_for_day, profile_id, day_iso)
+    queries = await asyncio.to_thread(dbmod.fetch_queries_for_day, profile_id, day_iso)
+    metric = compute_daily_metric(sessions, queries)
+    await asyncio.to_thread(dbmod.upsert_digital_metric, profile_id, day_iso, metric)
+    return metric
+
+
+@app.post("/extension/ingest")
+async def extension_ingest(req: ExtensionIngestReq) -> Dict[str, Any]:
+    """La extensión empuja sesiones de navegación + búsquedas en lote.
+    Si hay profile_id, además recalculamos la métrica diaria."""
+    try:
+        sessions_payload = [s.model_dump() for s in req.sessions]
+        queries_payload = [q.model_dump() for q in req.queries]
+        n_sessions = await asyncio.to_thread(
+            dbmod.insert_browsing_sessions, req.profile_id, sessions_payload
+        )
+        n_queries = await asyncio.to_thread(
+            dbmod.insert_search_queries, req.profile_id, queries_payload
+        )
+    except Exception as e:  # noqa: BLE001
+        return {
+            "ok": False,
+            "saved_sessions": 0,
+            "saved_queries": 0,
+            "error": str(e),
+        }
+
+    metric: Optional[Dict[str, Any]] = None
+    metric_error: Optional[str] = None
+    if req.profile_id and req.recompute_today:
+        try:
+            metric = await _recompute_digital_metric(req.profile_id, _today_iso())
+        except Exception as e:  # noqa: BLE001
+            metric_error = str(e)
+
+    return {
+        "ok": True,
+        "saved_sessions": n_sessions,
+        "saved_queries": n_queries,
+        "metric": metric,
+        "metric_error": metric_error,
+    }
+
+
+@app.get("/digital/{profile_id}/today")
+async def digital_today(profile_id: str) -> Dict[str, Any]:
+    try:
+        metric = await asyncio.to_thread(dbmod.get_latest_digital_metric, profile_id)
+    except Exception as e:  # noqa: BLE001
+        return {"metric": None, "error": str(e)}
+    return {"metric": metric}
+
+
+@app.post("/digital/{profile_id}/recompute")
+async def digital_recompute(profile_id: str) -> Dict[str, Any]:
+    try:
+        metric = await _recompute_digital_metric(profile_id, _today_iso())
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"recompute: {e}")
+    return {"ok": True, "metric": metric}
+
+
+@app.get("/digital/{profile_id}/history")
+async def digital_history(profile_id: str, days: int = 14) -> Dict[str, Any]:
+    try:
+        history = await asyncio.to_thread(
+            dbmod.list_digital_metrics, profile_id, max(1, min(60, days))
+        )
+    except Exception as e:  # noqa: BLE001
+        return {"history": [], "error": str(e)}
+    return {"history": history}
+
+
+# ─────────── Recomendaciones generadas por LLM ───────────
+@app.post("/recommendations/generate")
+async def recommendations_generate(req: RecommendReq) -> Dict[str, Any]:
+    """Junta todo el contexto del usuario y pide al LLM 3-5 recomendaciones."""
+
+    async def _safe(coro):
+        try:
+            return await coro
+        except Exception:  # noqa: BLE001
+            return None
+
+    assessments = (
+        await _safe(asyncio.to_thread(dbmod.list_latest_assessments, req.profile_id))
+        or []
+    )
+    profile_summary = profile_context_summary(assessments) if assessments else None
+
+    metric_row = await _safe(
+        asyncio.to_thread(dbmod.get_latest_digital_metric, req.profile_id)
+    )
+    digital_summary = None
+    metric_for_prompt = None
+    if metric_row:
+        metric_for_prompt = {
+            "minutes_by_category": {
+                "social": metric_row.get("minutes_social", 0),
+                "entertainment": metric_row.get("minutes_entertainment", 0),
+                "news": metric_row.get("minutes_news", 0),
+                "work": metric_row.get("minutes_work", 0),
+                "education": metric_row.get("minutes_education", 0),
+                "shopping": metric_row.get("minutes_shopping", 0),
+                "search": metric_row.get("minutes_search", 0),
+                "ai": metric_row.get("minutes_ai", 0),
+                "other": metric_row.get("minutes_other", 0),
+            },
+            "scores": {
+                "social": metric_row.get("score_social"),
+                "focus": metric_row.get("score_focus"),
+                "balance": metric_row.get("score_balance"),
+                "digital_overall": metric_row.get("score_digital_overall"),
+            },
+            "top_domains": metric_row.get("top_domains") or [],
+            "search_themes": metric_row.get("search_themes") or [],
+            "total_minutes": sum(
+                metric_row.get(k, 0) or 0
+                for k in [
+                    "minutes_social", "minutes_entertainment", "minutes_news",
+                    "minutes_work", "minutes_education", "minutes_shopping",
+                    "minutes_search", "minutes_ai", "minutes_other",
+                ]
+            ),
+        }
+        digital_summary = metric_summary_for_llm(metric_for_prompt)
+
+    signals = (
+        await _safe(
+            asyncio.to_thread(dbmod.list_recent_agent_signals, req.profile_id, None, 8)
+        )
+        or []
+    )
+    habits = await _safe(asyncio.to_thread(dbmod.list_habits)) or []
+
+    try:
+        out = await generate_recommendations(
+            profile_summary=profile_summary,
+            digital_summary=digital_summary,
+            agent_signals=signals,
+            habits=habits,
+            recent_chat_excerpt=req.include_chat_excerpt,
+            max_items=req.max_items,
+        )
+    except RecommenderError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    saved_rows: List[Dict[str, Any]] = []
+    save_error: Optional[str] = None
+    if req.save:
+        try:
+            saved_rows = await asyncio.to_thread(
+                dbmod.insert_recommendations,
+                req.profile_id,
+                out["items"],
+                out["model"],
+                {
+                    "digital": metric_for_prompt,
+                    "agent_signals": signals[:5],
+                    "assessments_summary": profile_summary,
+                },
+            )
+        except Exception as e:  # noqa: BLE001
+            save_error = str(e)
+
+    return {
+        "items": out["items"],
+        "model": out["model"],
+        "saved": saved_rows,
+        "save_error": save_error,
+    }
+
+
+@app.get("/recommendations/{profile_id}")
+async def recommendations_list(
+    profile_id: str, status: Optional[str] = None
+) -> Dict[str, Any]:
+    try:
+        rows = await asyncio.to_thread(
+            dbmod.list_recommendations, profile_id, status, 30
+        )
+    except Exception as e:  # noqa: BLE001
+        return {"items": [], "error": str(e)}
+    return {"items": rows}
+
+
+@app.post("/recommendations/{rec_id}/action")
+async def recommendation_action(rec_id: str, req: RecActionReq) -> Dict[str, Any]:
+    valid = {"accepted", "dismissed", "snoozed"}
+    if req.status not in valid:
+        raise HTTPException(status_code=400, detail=f"status inválido: {req.status}")
+    try:
+        row = await asyncio.to_thread(
+            dbmod.update_recommendation_status, rec_id, req.status
+        )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"ok": True, "row": row}
+
+
+@app.post("/recommendations/{rec_id}/accept-habit")
+async def recommendation_accept_habit(rec_id: str) -> Dict[str, Any]:
+    """Crea un hábito a partir de la propuesta de la recomendación y la marca aceptada."""
+    try:
+        rec_rows = await asyncio.to_thread(
+            lambda: dbmod.db()
+            .table("recommendations")
+            .select("*")
+            .eq("id", rec_id)
+            .limit(1)
+            .execute()
+            .data
+            or []
+        )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"db error: {e}")
+    if not rec_rows:
+        raise HTTPException(status_code=404, detail="recomendación no encontrada")
+    rec = rec_rows[0]
+    proposal = rec.get("habit_proposal") or {}
+    if rec.get("kind") != "habit" or not proposal:
+        raise HTTPException(
+            status_code=400, detail="esta recomendación no es un hábito"
+        )
+    try:
+        habit = await asyncio.to_thread(
+            dbmod.create_habit_from_proposal, rec["profile_id"], proposal
+        )
+        await asyncio.to_thread(
+            dbmod.update_recommendation_status,
+            rec_id,
+            "accepted",
+            habit.get("id"),
+        )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"db error: {e}")
+    return {"ok": True, "habit": habit, "recommendation_id": rec_id}
