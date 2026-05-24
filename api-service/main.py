@@ -8,7 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 import db as dbmod
-from agents import AGENT_DEFINITIONS, AgentError, run_specialist
+from agents import (
+    AGENT_DEFINITIONS,
+    AgentError,
+    generate_agent_question,
+    run_specialist,
+)
 from assessments import ASSESSMENTS, profile_context_summary, score_assessment
 from core import core_reply, core_synthesis
 
@@ -26,7 +31,32 @@ app.add_middleware(
 class SpecialistReq(BaseModel):
     context: str
     check_in_id: Optional[str] = None
+    profile_id: Optional[str] = None
     save: bool = False
+
+
+class CheckInStartReq(BaseModel):
+    profile_id: Optional[str] = None
+
+
+class NextQuestionReq(BaseModel):
+    check_in_id: Optional[str] = None
+    profile_id: Optional[str] = None
+    agent: str
+    position: int = 0
+    profile_context: Optional[str] = None
+    save: bool = True
+
+
+class SaveTurnReq(BaseModel):
+    check_in_id: str
+    profile_id: Optional[str] = None
+    agent: Optional[str] = None
+    position: int = 0
+    question: str
+    chips: Optional[List[Dict[str, Any]]] = None
+    answer: Optional[str] = None
+    answer_value: Optional[Dict[str, Any]] = None
 
 
 class ChatMessage(BaseModel):
@@ -43,7 +73,7 @@ class ChatReq(BaseModel):
 class SynthesizeReq(BaseModel):
     transcript: str
     check_in_id: Optional[str] = None
-    save: bool = False
+    save: bool = True   # por defecto guardamos (antes era False)
     profile_id: Optional[str] = None
     profile_context: Optional[str] = None
 
@@ -103,6 +133,7 @@ async def specialist(kind: str, req: SpecialistReq) -> Dict[str, Any]:
                 raw_context=req.context,
                 model=out["model"],
                 check_in_id=req.check_in_id,
+                profile_id=req.profile_id,
             )
             out["saved"] = True
             out["row_id"] = saved.get("id")
@@ -169,6 +200,7 @@ async def synthesize(req: SynthesizeReq) -> Dict[str, Any]:
                     raw_context=req.transcript,
                     model=r["model"],
                     check_in_id=req.check_in_id,
+                    profile_id=req.profile_id,
                 )
                 if saved.get("id"):
                     saved_ids.append(saved["id"])
@@ -191,12 +223,93 @@ async def synthesize(req: SynthesizeReq) -> Dict[str, Any]:
 
 # ─────────── Check-in lifecycle ───────────
 @app.post("/checkin/start")
-async def checkin_start() -> Dict[str, Any]:
+async def checkin_start(req: CheckInStartReq) -> Dict[str, Any]:
     try:
-        row = await asyncio.to_thread(dbmod.create_check_in)
+        row = await asyncio.to_thread(dbmod.create_check_in, profile_id=req.profile_id)
         return {"id": row.get("id"), "row": row}
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"db error: {e}")
+
+
+@app.post("/checkin/turn")
+async def checkin_turn(req: SaveTurnReq) -> Dict[str, Any]:
+    """Guarda un turno (pregunta + respuesta) del check-in."""
+    try:
+        row = await asyncio.to_thread(
+            dbmod.save_check_in_turn,
+            check_in_id=req.check_in_id,
+            profile_id=req.profile_id,
+            agent=req.agent,
+            position=req.position,
+            question=req.question,
+            chips=req.chips,
+            answer=req.answer,
+            answer_value=req.answer_value,
+        )
+        return {"saved": True, "id": row.get("id"), "row": row}
+    except Exception as e:  # noqa: BLE001
+        return {"saved": False, "error": str(e)}
+
+
+@app.post("/checkin/next-question")
+async def checkin_next_question(req: NextQuestionReq) -> Dict[str, Any]:
+    """Genera la siguiente pregunta dinámica para un agente, basándose en
+    baseline + historial real del usuario."""
+    if req.agent not in AGENT_DEFINITIONS:
+        raise HTTPException(status_code=400, detail=f"agente desconocido: {req.agent}")
+
+    baseline = req.profile_context
+    recent_turns: List[Dict[str, Any]] = []
+    recent_signals: List[Dict[str, Any]] = []
+
+    if req.profile_id:
+        if not baseline:
+            try:
+                results = await asyncio.to_thread(
+                    dbmod.list_latest_assessments, req.profile_id
+                )
+                baseline = profile_context_summary(results)
+            except Exception:  # noqa: BLE001
+                baseline = None
+        try:
+            recent_turns = await asyncio.to_thread(
+                dbmod.list_recent_agent_turns, req.profile_id, req.agent, 6
+            )
+        except Exception:  # noqa: BLE001
+            recent_turns = []
+        try:
+            recent_signals = await asyncio.to_thread(
+                dbmod.list_recent_agent_signals, req.profile_id, req.agent, 3
+            )
+        except Exception:  # noqa: BLE001
+            recent_signals = []
+
+    try:
+        out = await generate_agent_question(
+            req.agent,
+            baseline=baseline,
+            recent_turns=recent_turns,
+            recent_signals=recent_signals,
+        )
+    except AgentError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    out["saved_turn"] = None
+    if req.save and req.check_in_id:
+        try:
+            saved = await asyncio.to_thread(
+                dbmod.save_check_in_turn,
+                check_in_id=req.check_in_id,
+                profile_id=req.profile_id,
+                agent=req.agent,
+                position=req.position,
+                question=out["question"],
+                chips=out["chips"],
+            )
+            out["saved_turn"] = saved.get("id")
+        except Exception as e:  # noqa: BLE001
+            out["save_error"] = str(e)
+    return out
 
 
 # ─────────── Habits ───────────
@@ -219,25 +332,71 @@ async def post_habit_log(req: HabitLogReq) -> Dict[str, Any]:
 
 
 # ─────────── Auth mock + onboarding ───────────
+def _validate_credentials(email: str, password: str) -> None:
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="email inválido")
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="contraseña debe tener 6+ caracteres")
+
+
+def _ephemeral_profile(email: str, name: Optional[str], reason: str) -> Dict[str, Any]:
+    return {
+        "id": None,
+        "email": email.lower(),
+        "name": name,
+        "ephemeral": True,
+        "warn": f"no persistido: {reason}",
+    }
+
+
+@app.post("/auth/register")
+async def auth_register(req: LoginReq) -> Dict[str, Any]:
+    """Crea un profile nuevo. 409 si el email ya existe."""
+    _validate_credentials(req.email, req.password)
+    try:
+        existing = await asyncio.to_thread(dbmod.get_profile_by_email, req.email)
+    except Exception as e:  # noqa: BLE001
+        return _ephemeral_profile(req.email, req.name, str(e))
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail="Este email ya está registrado. Inicia sesión.",
+        )
+    try:
+        profile = await asyncio.to_thread(dbmod.create_profile, req.email, req.name)
+    except Exception as e:  # noqa: BLE001
+        return _ephemeral_profile(req.email, req.name, str(e))
+    return {**profile, "ephemeral": False, "registered": True}
+
+
+@app.post("/auth/login")
+async def auth_login(req: LoginReq) -> Dict[str, Any]:
+    """Inicia sesión. 404 si el email no existe."""
+    _validate_credentials(req.email, req.password)
+    try:
+        profile = await asyncio.to_thread(dbmod.get_profile_by_email, req.email)
+    except Exception as e:  # noqa: BLE001
+        return _ephemeral_profile(req.email, req.name, str(e))
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail="No encontramos una cuenta con ese email. Regístrate primero.",
+        )
+    try:
+        await asyncio.to_thread(dbmod.touch_profile, profile["id"])
+    except Exception:  # noqa: BLE001
+        pass
+    return {**profile, "ephemeral": False}
+
+
 @app.post("/auth/mock-login")
 async def mock_login(req: LoginReq) -> Dict[str, Any]:
-    """Acepta cualquier email/contraseña. Solo valida formato mínimo."""
-    if "@" not in req.email or "." not in req.email.split("@")[-1]:
-        raise HTTPException(status_code=400, detail="email inválido")
-    if len(req.password) < 6:
-        raise HTTPException(status_code=400, detail="contraseña debe tener 6+ caracteres")
+    """Compat: acepta cualquier email/contraseña (upsert)."""
+    _validate_credentials(req.email, req.password)
     try:
         profile = await asyncio.to_thread(dbmod.upsert_profile, req.email, req.name)
     except Exception as e:  # noqa: BLE001
-        # Si Supabase no tiene la migración aplicada, devolvemos un profile efímero
-        # para que el flujo del frontend siga funcionando.
-        return {
-            "id": None,
-            "email": req.email.lower(),
-            "name": req.name,
-            "ephemeral": True,
-            "warn": f"no persistido: {e}",
-        }
+        return _ephemeral_profile(req.email, req.name, str(e))
     return {**profile, "ephemeral": False}
 
 

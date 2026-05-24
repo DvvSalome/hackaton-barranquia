@@ -5101,7 +5101,39 @@ document.body.appendChild(mount);
     font-family: inherit; font-size: 14px; cursor: pointer;
   }
   .ka-ghost:hover { color: #fff; }
-  .ka-err { color: #fca5a5; font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .ka-err { color: #fca5a5; font-size: 13px; margin-top: 8px; min-height: 18px; transition: color .2s; }
+  .ka-err.ok { color: #a78bfa; }
+  .ka-banner {
+    display: none;
+    align-items: flex-start; gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 13px; line-height: 1.4;
+    margin-bottom: 14px;
+    animation: ka-rise .35s cubic-bezier(.2,.7,.2,1);
+  }
+  .ka-banner.show { display: flex; }
+  .ka-banner.ok {
+    background: linear-gradient(135deg, rgba(139,111,255,.18), rgba(109,76,255,.12));
+    border: 1px solid rgba(167,139,250,.4);
+    color: #e6e9ff;
+    box-shadow: 0 8px 24px -10px rgba(139,111,255,.5);
+  }
+  .ka-banner.err {
+    background: rgba(220,80,80,.12);
+    border: 1px solid rgba(252,165,165,.35);
+    color: #fecaca;
+  }
+  .ka-banner .ka-banner-icon {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, #8b6fff, #6d4cff);
+    display: grid; place-items: center; flex-shrink: 0;
+    color: #fff; font-weight: 700; font-size: 13px;
+    margin-top: 1px;
+  }
+  .ka-banner.err .ka-banner-icon { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+  .ka-banner strong { display: block; font-weight: 600; color: #fff; }
+  .ka-banner span.sub { color: rgba(230,233,255,.7); font-size: 12px; }
   .ka-foot {
     margin-top: 14px; font-size: 12px; text-align: center;
     color: rgba(230,233,255,.45);
@@ -5276,8 +5308,13 @@ document.body.appendChild(mount);
     if (body) opts.body = JSON.stringify(body);
     const r = await fetch(API + path, opts);
     if (!r.ok) {
-      const txt = await r.text().catch(()=> '');
-      throw new Error(`${r.status} ${txt}`);
+      let detail = '';
+      try { const j = await r.json(); detail = j.detail || JSON.stringify(j); }
+      catch { detail = await r.text().catch(()=> ''); }
+      const err = new Error(detail || `error ${r.status}`);
+      err.status = r.status;
+      err.detail = detail;
+      throw err;
     }
     return r.json();
   }
@@ -5351,8 +5388,13 @@ document.body.appendChild(mount);
         </div>
 
         <div class="ka-card">
-          <h2 class="ka-card-title">Bienvenido de vuelta</h2>
-          <p class="ka-card-sub">Continúa optimizando tu bienestar</p>
+          <h2 class="ka-card-title" id="ka-card-title">Bienvenido de vuelta</h2>
+          <p class="ka-card-sub" id="ka-card-sub">Continúa optimizando tu bienestar</p>
+
+          <div class="ka-banner" id="ka-banner">
+            <span class="ka-banner-icon" id="ka-banner-icon">✓</span>
+            <div><strong id="ka-banner-title"></strong><span class="sub" id="ka-banner-sub"></span></div>
+          </div>
 
           <button class="ka-action-chip" id="ka-quick">
             <span class="arrow">→</span>
@@ -5403,34 +5445,82 @@ document.body.appendChild(mount);
 
     const tabs = shell.querySelectorAll('.ka-tab');
     const label = shell.querySelector('#ka-submit-label');
-    function setTab(name){
+    const footMsg = shell.querySelector('#ka-switch').parentElement;
+    const email = shell.querySelector('#ka-email');
+    const pass = shell.querySelector('#ka-pass');
+    const err = shell.querySelector('#ka-err');
+    const submit = shell.querySelector('#ka-submit');
+    const cardTitle = shell.querySelector('#ka-card-title');
+    const cardSub = shell.querySelector('#ka-card-sub');
+    const banner = shell.querySelector('#ka-banner');
+    const bannerIcon = shell.querySelector('#ka-banner-icon');
+    const bannerTitle = shell.querySelector('#ka-banner-title');
+    const bannerSub = shell.querySelector('#ka-banner-sub');
+
+    function hideBanner(){ banner.classList.remove('show','ok','err'); }
+    function showBanner(kind, title, sub){
+      banner.classList.remove('ok','err');
+      banner.classList.add('show', kind);
+      bannerIcon.textContent = kind === 'ok' ? '✓' : '!';
+      bannerTitle.textContent = title;
+      bannerSub.textContent = sub || '';
+    }
+    function showOk(msg){ err.textContent = msg; err.classList.add('ok'); }
+    function showErr(msg){ err.textContent = msg; err.classList.remove('ok'); }
+
+    function setTab(name, { keepBanner = false } = {}){
       tab = name;
       tabs.forEach(x => x.classList.toggle('on', x.dataset.tab === name));
       label.textContent = name === 'login' ? 'Entrar' : 'Crear cuenta';
+      cardTitle.textContent = name === 'login' ? 'Bienvenido de vuelta' : 'Crea tu cuenta';
+      cardSub.textContent = name === 'login'
+        ? 'Continúa optimizando tu bienestar'
+        : 'Empieza tu viaje con Kairós';
+      footMsg.innerHTML = name === 'login'
+        ? '¿No tienes cuenta? <a id="ka-switch">Crear una</a>'
+        : '¿Ya tienes cuenta? <a id="ka-switch">Inicia sesión</a>';
+      footMsg.querySelector('#ka-switch').addEventListener('click', () => setTab(tab === 'login' ? 'signup' : 'login'));
+      if (!keepBanner) hideBanner();
+      showErr('');
     }
     tabs.forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));
     shell.querySelector('#ka-switch').addEventListener('click', () => setTab(tab === 'login' ? 'signup' : 'login'));
 
-    const submit = shell.querySelector('#ka-submit');
-    const email = shell.querySelector('#ka-email');
-    const pass = shell.querySelector('#ka-pass');
-    const err = shell.querySelector('#ka-err');
-
     async function doSubmit(){
-      err.textContent = '';
+      showErr('');
       const e = email.value.trim();
       const p = pass.value;
-      if (!e.includes('@') || !e.split('@')[1].includes('.')){ err.textContent = 'Email inválido'; return; }
-      if (p.length < 6){ err.textContent = 'Contraseña debe tener 6+ caracteres'; return; }
-      submit.disabled = true; label.textContent = '…';
+      if (!e.includes('@') || !e.split('@')[1].includes('.')){ showErr('Email inválido'); return; }
+      if (p.length < 6){ showErr('Contraseña debe tener 6+ caracteres'); return; }
+      submit.disabled = true;
+      const prevLabel = label.textContent;
+      label.textContent = '…';
       try {
-        const profile = await api('/auth/mock-login', { email: e, password: p });
-        setProfile(profile);
-        await start();
+        if (tab === 'signup'){
+          await api('/auth/register', { email: e, password: p });
+          // No auto-login: cambiamos a login con banner de éxito
+          setTab('login', { keepBanner: true });
+          showBanner('ok', '✓ Cuenta creada con éxito', 'Ahora inicia sesión con tu email y contraseña.');
+          pass.value = '';
+          setTimeout(() => pass.focus(), 50);
+        } else {
+          const profile = await api('/auth/login', { email: e, password: p });
+          setProfile(profile);
+          showBanner('ok', '✓ Inicio de sesión exitoso', 'Cargando tu espacio…');
+          label.textContent = 'Entrando…';
+          await new Promise(r => setTimeout(r, 900));
+          await start();
+          return; // start() reemplaza el DOM
+        }
       } catch (ex){
-        err.textContent = 'No pude conectar con el servidor (' + ex.message + ')';
+        hideBanner();
+        if (ex.status === 404)      showErr(ex.detail || 'No encontramos esa cuenta. Regístrate.');
+        else if (ex.status === 409) showErr(ex.detail || 'Este email ya está registrado.');
+        else if (ex.status === 400) showErr(ex.detail || 'Datos inválidos.');
+        else                        showErr('No pude conectar con el servidor (' + (ex.message || ex) + ')');
       } finally {
-        submit.disabled = false; label.textContent = tab === 'login' ? 'Entrar' : 'Crear cuenta';
+        submit.disabled = false;
+        if (label.textContent === '…') label.textContent = prevLabel;
       }
     }
     submit.addEventListener('click', doSubmit);
@@ -5438,7 +5528,29 @@ document.body.appendChild(mount);
     shell.querySelector('#ka-quick').addEventListener('click', () => {
       email.value = 'demo@kairos.ai';
       pass.value = 'demo123';
-      doSubmit();
+      setTab('login', { keepMessage: false });
+      // En demo intentamos login; si no existe, registramos y volvemos a login.
+      (async () => {
+        showErr('');
+        try {
+          const profile = await api('/auth/login', { email: email.value, password: pass.value });
+          setProfile(profile);
+          await start();
+        } catch (ex) {
+          if (ex.status === 404) {
+            try {
+              await api('/auth/register', { email: email.value, password: pass.value });
+              const profile = await api('/auth/login', { email: email.value, password: pass.value });
+              setProfile(profile);
+              await start();
+            } catch (e2) {
+              showErr('Demo no disponible: ' + (e2.detail || e2.message));
+            }
+          } else {
+            showErr('Demo no disponible: ' + (ex.detail || ex.message));
+          }
+        }
+      })();
     });
     setTimeout(() => email.focus(), 100);
   }

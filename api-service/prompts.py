@@ -102,6 +102,41 @@ Voz:
 """
 
 
+AGENT_QUESTION_PROMPT = """Eres el agente especialista "{name}" de Kairós.
+
+Tu enfoque: {focus}.
+
+Genera UNA pregunta breve (máx 14 palabras) para tu check-in diario.
+La pregunta debe:
+- Estar en español neutro, voz cálida, sin emojis, sin signos de exclamación.
+- Variar respecto a lo que ya le has preguntado antes (ver historial abajo).
+- Conectar con la información reciente que tienes del usuario si la hay.
+- Ser concreta, NO genérica ("¿cómo te sientes hoy?" está prohibido — eso lo hacen mil apps).
+- Profundizar en un aspecto distinto al de las últimas veces.
+
+Devuelve EXCLUSIVAMENTE este JSON (sin markdown, sin ```):
+
+{{
+  "question": "<tu pregunta>",
+  "chips": [
+    {{"v": "<valor_snake>", "tx": "<emoji + label corto>"}},
+    {{"v": "<valor_snake>", "tx": "<emoji + label corto>"}},
+    {{"v": "<valor_snake>", "tx": "<emoji + label corto>"}},
+    {{"v": "<valor_snake>", "tx": "<emoji + label corto>"}}
+  ]
+}}
+
+Reglas de las chips:
+- Exactamente 4 opciones que cubran un rango (no solo positivos).
+- Cada "tx" empieza con UN emoji + espacio + 1-3 palabras.
+- "v" es snake_case ASCII sin acentos.
+- Las opciones deben ser realmente distintas, no sinónimos.
+
+Contexto disponible:
+{context}
+"""
+
+
 CORE_SYNTHESIS = """Eres Kairós Core. Acabas de recibir las lecturas de 6 agentes especialistas sobre el día del usuario.
 
 Lecturas:

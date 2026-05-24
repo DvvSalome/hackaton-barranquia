@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from openai import AsyncOpenAI
 
 from config import OPENROUTER_API_KEY, OPENROUTER_MODEL
-from prompts import AGENT_DEFINITIONS, SPECIALIST_PROMPT
+from prompts import AGENT_DEFINITIONS, AGENT_QUESTION_PROMPT, SPECIALIST_PROMPT
 
 
 class AgentError(Exception):
@@ -132,5 +132,106 @@ async def run_specialist(kind: str, context: str) -> Dict[str, Any]:
         "score": score,
         "insight": str(data.get("insight", "")).strip(),
         "signals": _coerce_signals(data.get("signals")),
+        "model": used_model,
+    }
+
+
+def _coerce_chips(raw_chips: Any) -> List[Dict[str, str]]:
+    if not isinstance(raw_chips, list):
+        return []
+    out: List[Dict[str, str]] = []
+    seen: set = set()
+    for c in raw_chips[:4]:
+        if not isinstance(c, dict):
+            continue
+        v = str(c.get("v") or "").strip().lower().replace(" ", "_")
+        tx = str(c.get("tx") or "").strip()
+        if not v or not tx or v in seen:
+            continue
+        seen.add(v)
+        out.append({"v": v[:32], "tx": tx[:48]})
+    return out
+
+
+async def generate_agent_question(
+    kind: str,
+    *,
+    baseline: Optional[str] = None,
+    recent_turns: Optional[List[Dict[str, Any]]] = None,
+    recent_signals: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """Pide al LLM una pregunta + 4 chips para el agente, considerando historial."""
+    if kind not in AGENT_DEFINITIONS:
+        raise AgentError(f"agente desconocido: {kind}")
+    spec = AGENT_DEFINITIONS[kind]
+
+    parts: List[str] = []
+    if baseline:
+        parts.append(f"Baseline del onboarding:\n{baseline}")
+    if recent_turns:
+        lines = []
+        for t in recent_turns[:5]:
+            q = (t.get("question") or "").strip()
+            a = (t.get("answer") or "").strip()
+            if q:
+                lines.append(f"- Antes preguntaste: \"{q}\" → respondió: \"{a or '—'}\"")
+        if lines:
+            parts.append("Historial reciente de tus preguntas:\n" + "\n".join(lines))
+    if recent_signals:
+        lines = []
+        for s in recent_signals[:3]:
+            ins = (s.get("insight") or "").strip()
+            if ins:
+                lines.append(f"- {ins}")
+        if lines:
+            parts.append("Tus últimas lecturas del usuario:\n" + "\n".join(lines))
+    context = "\n\n".join(parts) if parts else "(primera vez con este usuario, sin historial)"
+
+    system = AGENT_QUESTION_PROMPT.format(
+        name=spec["name"], focus=spec["focus"], context=context
+    )
+
+    fallbacks = [m for m in FALLBACK_MODELS if m != OPENROUTER_MODEL]
+    last_err: Exception
+    for attempt in range(3):
+        try:
+            resp = await openrouter.chat.completions.create(
+                model=OPENROUTER_MODEL,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": "Genera la pregunta y las chips ahora."},
+                ],
+                temperature=0.85,  # más variedad
+                max_tokens=400,
+                extra_body={"models": fallbacks},
+            )
+            break
+        except Exception as e:  # noqa: BLE001
+            last_err = e
+            msg = str(e).lower()
+            if "429" in msg or "rate" in msg:
+                await asyncio.sleep(2 ** attempt)
+                continue
+            raise AgentError(f"openrouter falló: {e}") from e
+    else:
+        raise AgentError(f"openrouter rate-limited: {last_err}")
+
+    raw = resp.choices[0].message.content or ""
+    used_model = getattr(resp, "model", OPENROUTER_MODEL)
+    cleaned = _extract_json(raw)
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        raise AgentError(f"pregunta {kind} no devolvió JSON válido: {raw[:300]}") from e
+
+    question = str(data.get("question") or "").strip()
+    chips = _coerce_chips(data.get("chips"))
+    if not question or len(chips) < 2:
+        raise AgentError(f"pregunta {kind} incompleta: {data}")
+    return {
+        "agent": kind,
+        "name": spec["name"],
+        "question": question,
+        "chips": chips,
         "model": used_model,
     }
