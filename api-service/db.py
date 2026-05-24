@@ -105,6 +105,19 @@ def save_check_in_turn(
     return res.data[0] if res.data else {}
 
 
+def update_check_in_turn_answer(
+    turn_id: str,
+    *,
+    answer: str,
+    answer_value: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    patch: Dict[str, Any] = {"answer": answer, "answered_at": "now()"}
+    if answer_value is not None:
+        patch["answer_value"] = answer_value
+    res = db().table("check_in_turns").update(patch).eq("id", turn_id).execute()
+    return res.data[0] if res.data else {}
+
+
 def list_recent_agent_turns(
     profile_id: str,
     agent: Optional[str] = None,

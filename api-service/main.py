@@ -49,14 +49,15 @@ class NextQuestionReq(BaseModel):
 
 
 class SaveTurnReq(BaseModel):
-    check_in_id: str
+    check_in_id: Optional[str] = None
     profile_id: Optional[str] = None
     agent: Optional[str] = None
     position: int = 0
-    question: str
+    question: Optional[str] = None
     chips: Optional[List[Dict[str, Any]]] = None
     answer: Optional[str] = None
     answer_value: Optional[Dict[str, Any]] = None
+    turn_id: Optional[str] = None   # si viene, hace UPDATE
 
 
 class ChatMessage(BaseModel):
@@ -233,19 +234,32 @@ async def checkin_start(req: CheckInStartReq) -> Dict[str, Any]:
 
 @app.post("/checkin/turn")
 async def checkin_turn(req: SaveTurnReq) -> Dict[str, Any]:
-    """Guarda un turno (pregunta + respuesta) del check-in."""
+    """Guarda o actualiza un turno (pregunta + respuesta) del check-in.
+    Si viene turn_id, UPDATE; si no, INSERT (requiere check_in_id + question)."""
     try:
-        row = await asyncio.to_thread(
-            dbmod.save_check_in_turn,
-            check_in_id=req.check_in_id,
-            profile_id=req.profile_id,
-            agent=req.agent,
-            position=req.position,
-            question=req.question,
-            chips=req.chips,
-            answer=req.answer,
-            answer_value=req.answer_value,
-        )
+        if req.turn_id:
+            if req.answer is None:
+                return {"saved": False, "error": "answer requerido para update"}
+            row = await asyncio.to_thread(
+                dbmod.update_check_in_turn_answer,
+                req.turn_id,
+                answer=req.answer,
+                answer_value=req.answer_value,
+            )
+        else:
+            if not req.check_in_id or not req.question:
+                return {"saved": False, "error": "check_in_id y question requeridos"}
+            row = await asyncio.to_thread(
+                dbmod.save_check_in_turn,
+                check_in_id=req.check_in_id,
+                profile_id=req.profile_id,
+                agent=req.agent,
+                position=req.position,
+                question=req.question,
+                chips=req.chips,
+                answer=req.answer,
+                answer_value=req.answer_value,
+            )
         return {"saved": True, "id": row.get("id"), "row": row}
     except Exception as e:  # noqa: BLE001
         return {"saved": False, "error": str(e)}
