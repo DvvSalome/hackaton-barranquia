@@ -88,3 +88,53 @@ def log_habit(habit_id: str, completed: bool = True, note: Optional[str] = None)
         .execute()
     )
     return res.data[0] if res.data else {}
+
+
+# ────────────── Profiles + onboarding ──────────────
+def upsert_profile(email: str, name: Optional[str] = None) -> Dict[str, Any]:
+    """Crea o devuelve un profile por email (mock auth)."""
+    email_lc = email.strip().lower()
+    existing = (
+        db().table("profiles").select("*").eq("email", email_lc).limit(1).execute()
+    )
+    if existing.data:
+        row = existing.data[0]
+        db().table("profiles").update({"last_login": "now()"}).eq("id", row["id"]).execute()
+        return row
+    payload: Dict[str, Any] = {"email": email_lc, "last_login": "now()"}
+    if name:
+        payload["name"] = name
+    res = db().table("profiles").insert(payload).execute()
+    return res.data[0] if res.data else {}
+
+
+def save_assessment(
+    profile_id: str,
+    *,
+    kind: str,
+    score: int,
+    max_score: int,
+    severity: str,
+    answers: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    row = {
+        "profile_id": profile_id,
+        "kind": kind,
+        "score": score,
+        "max_score": max_score,
+        "severity": severity,
+        "answers": answers,
+    }
+    res = db().table("assessment_results").insert(row).execute()
+    return res.data[0] if res.data else {}
+
+
+def list_latest_assessments(profile_id: str) -> List[Dict[str, Any]]:
+    res = (
+        db()
+        .table("latest_assessment")
+        .select("*")
+        .eq("profile_id", profile_id)
+        .execute()
+    )
+    return res.data or []

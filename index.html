@@ -3661,6 +3661,66 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     },
   };
 
+  /* ═══════════ API: Kairós backend ═══════════ */
+  const KAIROS_API = window.KAIROS_API_URL || 'http://127.0.0.1:8787';
+  const AGENT_KIND_MAP = { racha: 'rachas' };
+  let kairosHistory = [];
+
+  function kairosProfileExtras(){
+    const out = {};
+    const p = window.kairosAuth && window.kairosAuth.profile && window.kairosAuth.profile();
+    if (p && p.id) out.profile_id = p.id;
+    const ctx = window.kairosAuth && window.kairosAuth.baselineContext && window.kairosAuth.baselineContext();
+    if (ctx) out.profile_context = ctx;
+    return out;
+  }
+  async function apiChat(messages){
+    const r = await fetch(KAIROS_API + '/chat', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ messages, ...kairosProfileExtras() }),
+    });
+    if (!r.ok) throw new Error('chat ' + r.status);
+    return (await r.json()).reply;
+  }
+  async function apiAgent(kind, context){
+    const apiKind = AGENT_KIND_MAP[kind] || kind;
+    const r = await fetch(KAIROS_API + '/agents/' + apiKind, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ context }),
+    });
+    if (!r.ok) throw new Error('agent ' + r.status);
+    return await r.json();
+  }
+  async function apiSynthesize(transcript){
+    const r = await fetch(KAIROS_API + '/checkin/synthesize', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ transcript, ...kairosProfileExtras() }),
+    });
+    if (!r.ok) throw new Error('synthesize ' + r.status);
+    return await r.json();
+  }
+  function buildCheckInTranscript(){
+    const parts = [];
+    for (const id of ['animo','sueno','foco','energia','pantalla','racha']){
+      const a = AGENTS[id];
+      if (!a || !a.questions) continue;
+      for (const q of a.questions){
+        const v = state.answers[q.key];
+        if (!v) continue;
+        const c = q.chips ? q.chips.find(c => c.v === v) : null;
+        const label = c ? c.tx : v;
+        parts.push(`Pregunta (${a.title}): ${q.ask}`);
+        parts.push(`Respuesta: ${label}`);
+      }
+    }
+    return parts.join('\n');
+  }
+  function plainFromHTML(s){
+    const d = document.createElement('div');
+    d.innerHTML = s;
+    return (d.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
   // Helpers
   function labelOfChoice(qKey, v){
     for (const id of Object.keys(AGENTS)){
@@ -3938,6 +3998,19 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   function finishRecopilacion(){
     state.checkinDone = true;
     save();
+    // Dispara síntesis real con los 6 agentes en background; el resultado
+    // se mostrará cuando el usuario abra Kairós Core.
+    const transcript = buildCheckInTranscript();
+    if (transcript){
+      state.lastTranscript = transcript;
+      state.coreSynthesis = null;
+      save();
+      apiSynthesize(transcript).then(res => {
+        state.coreSynthesis = res.summary;
+        state.agentReadings = res.agents;
+        save();
+      }).catch(err => console.warn('[kairos] síntesis falló:', err));
+    }
     divider('Listo');
     const tp = typing();
     setTimeout(()=>{
@@ -3974,14 +4047,41 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     foot.innerHTML = '';
     setMode('kairos');
     pbar.style.width = '100%';
+    kairosHistory = [];
     const factsByAgent = FLOW_AGENTS.map(id => `<b style="color:${AGENTS[id].color}">${AGENTS[id].title}</b> ${isComplete(id) ? '✓' : '○'}`).join(' · ');
-    bubble('bot',
-      `Soy Kairós Core. Tengo lo que aprendieron los demás hoy:<br/><span class="kc-muted">${factsByAgent}</span>`,
-      { agent: 'Kairós Core', color: '#c4b5fd' });
-    setTimeout(()=>{
-      bubble('bot', synthesisLine(), { agent: 'Kairós Core', color: '#c4b5fd' });
-      renderKairosFreeform();
-    }, 800);
+    const intro = `Soy Kairós Core. Tengo lo que aprendieron los demás hoy:<br/><span class="kc-muted">${factsByAgent}</span>`;
+    bubble('bot', intro, { agent: 'Kairós Core', color: '#c4b5fd' });
+    kairosHistory.push({ role: 'assistant', content: plainFromHTML(intro) });
+
+    if (state.coreSynthesis){
+      setTimeout(()=>{
+        bubble('bot', state.coreSynthesis, { agent: 'Kairós Core', color: '#c4b5fd' });
+        kairosHistory.push({ role: 'assistant', content: state.coreSynthesis });
+        renderKairosFreeform();
+      }, 600);
+    } else if (state.checkinDone && state.lastTranscript){
+      const tp = typing();
+      apiSynthesize(state.lastTranscript).then(res => {
+        tp.remove();
+        state.coreSynthesis = res.summary;
+        state.agentReadings = res.agents;
+        save();
+        bubble('bot', res.summary, { agent: 'Kairós Core', color: '#c4b5fd' });
+        kairosHistory.push({ role: 'assistant', content: res.summary });
+        renderKairosFreeform();
+      }).catch(()=>{
+        tp.remove();
+        bubble('bot', synthesisLine(), { agent: 'Kairós Core', color: '#c4b5fd' });
+        renderKairosFreeform();
+      });
+    } else {
+      setTimeout(()=>{
+        const line = synthesisLine();
+        bubble('bot', line, { agent: 'Kairós Core', color: '#c4b5fd' });
+        kairosHistory.push({ role: 'assistant', content: plainFromHTML(line) });
+        renderKairosFreeform();
+      }, 600);
+    }
   }
 
   function synthesisLine(){
@@ -4001,28 +4101,22 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   function renderKairosFreeform(){
     foot.innerHTML = '';
     const suggestions = [
-      { tx: 'Resumen del día', a: 'Tu día se ve estable. Pantalla baja, ánimo bien, sueño normal. Mantén el ritmo de mañana — es donde te vas mejor.' },
-      { tx: '¿Qué playbook activo?', a: 'Recomiendo <b>"uso nocturno"</b> — corta pantalla a las 22:30 y cruza con tu calidad de sueño. Lo activo si me dices.' },
-      { tx: '¿Cómo voy esta semana?', a: 'Sueño 6/7 ✓ · Pantalla 4/7 ✓ · Movimiento 5/7. Tu peor día fue el lunes — coincide con poco sueño y mucha pantalla nocturna.' },
-      { tx: 'Hablar con un agente', a: 'Claro. Toca cualquier nombre en tu panel y abro su detalle. Si quieres añadir algo, puedo lanzarte solo esa conversación.' },
+      'Dame un resumen del día',
+      '¿Qué debería cuidar mañana?',
+      '¿Cómo voy esta semana?',
+      'Hablar con un agente',
     ];
     const chips = document.createElement('div');
     chips.className = 'kc-chips';
-    suggestions.forEach(s => {
+    suggestions.forEach(tx => {
       const b = document.createElement('button');
       b.className = 'kc-chip';
-      b.textContent = s.tx;
-      b.onclick = () => {
-        bubble('user', s.tx);
-        const tp = typing();
-        setTimeout(()=>{
-          tp.remove();
-          bubble('bot', s.a, { agent: 'Kairós Core', color: '#c4b5fd' });
-        }, 700);
-      };
+      b.textContent = tx;
+      b.onclick = () => sendToCore(tx);
       chips.appendChild(b);
     });
     foot.appendChild(chips);
+
     const inp = document.createElement('div');
     inp.className = 'kc-input';
     inp.innerHTML = `
@@ -4034,17 +4128,27 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     const send = () => {
       const v = input.value.trim();
       if (!v) return;
-      bubble('user', v);
       input.value = '';
-      const tp = typing();
-      setTimeout(()=>{
-        tp.remove();
-        bubble('bot', 'Lo proceso y te respondo con datos de tus agentes. Por ahora — estoy en modo demo y solo respondo las sugerencias de arriba 😉',
-          { agent: 'Kairós Core', color: '#c4b5fd' });
-      }, 700);
+      sendToCore(v);
     };
     inp.querySelector('.kc-send').onclick = send;
     input.addEventListener('keydown', e => { if (e.key==='Enter') send(); });
+  }
+
+  async function sendToCore(text){
+    bubble('user', text);
+    kairosHistory.push({ role: 'user', content: text });
+    const tp = typing();
+    try {
+      const reply = await apiChat(kairosHistory);
+      tp.remove();
+      bubble('bot', reply, { agent: 'Kairós Core', color: '#c4b5fd' });
+      kairosHistory.push({ role: 'assistant', content: reply });
+    } catch (e){
+      tp.remove();
+      bubble('bot', `No pude conectar con Kairós Core (${e.message}). Verifica que el api-service esté corriendo en ${KAIROS_API}.`,
+        { agent: 'Kairós Core', color: '#c4b5fd' });
+    }
   }
 
   /* ───── Single-agent chat (cuando hablas solo con uno) ───── */
@@ -4070,9 +4174,25 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     let i = 0;
     const ask = () => {
       if (i >= missing.length){
-        bubble('bot', '¡Listo! Actualicé mi panel.', { agent: a.title, color: a.color });
+        // Manda el contexto al agente real para una lectura concreta
+        const transcript = a.questions
+          .filter(q => state.answers[q.key])
+          .map(q => {
+            const v = state.answers[q.key];
+            const c = q.chips ? q.chips.find(c => c.v === v) : null;
+            return `P: ${q.ask}\nR: ${c ? c.tx : v}`;
+          })
+          .join('\n');
+        const tp = typing(a.color);
         foot.innerHTML = `<div class="kc-finish"><button class="kc-done">Cerrar</button></div>`;
         foot.querySelector('.kc-done').onclick = () => { closeOverlays(); renderAgentsBoard(); toast(`${a.title} actualizado`, 'ok'); };
+        apiAgent(id, transcript).then(res => {
+          tp.remove();
+          bubble('bot', res.insight || 'Tomé nota.', { agent: a.title, color: a.color });
+        }).catch(()=>{
+          tp.remove();
+          bubble('bot', '¡Listo! Actualicé mi panel.', { agent: a.title, color: a.color });
+        });
         return;
       }
       const q = missing[i];
@@ -4768,5 +4888,556 @@ document.body.appendChild(mount);
   ReactDOM.createRoot(mount).render(<App/>);
 })();
 </script>
+
+<!-- ════════════════════════════════════════════════════════════
+     AUTH + ONBOARDING
+     Pantalla completa que cubre el dashboard hasta completar/omitir.
+     ════════════════════════════════════════════════════════════ -->
+<style>
+  body.kairos-auth-open { overflow: hidden; }
+  #kairos-auth {
+    position: fixed; inset: 0; z-index: 9999;
+    background: radial-gradient(ellipse at 25% 30%, #1e1450 0%, #0b0a2a 45%, #050518 100%);
+    color: #e6e9ff;
+    font-family: 'Inter', -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    overflow-y: auto;
+    animation: ka-fade .35s ease;
+  }
+  @keyframes ka-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes ka-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  #kairos-auth::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(2px 2px at 12% 22%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(1.5px 1.5px at 78% 18%, rgba(167,139,250,.5), transparent 60%),
+      radial-gradient(2px 2px at 88% 70%, rgba(94,234,212,.4), transparent 60%),
+      radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(2px 2px at 60% 85%, rgba(255,255,255,.35), transparent 60%);
+    pointer-events: none;
+  }
+  .ka-stage { position: relative; width: 100%; padding: 48px 24px; }
+  .ka-shell {
+    max-width: 560px; margin: 0 auto;
+    text-align: center;
+    animation: ka-rise .45s cubic-bezier(.2,.7,.2,1);
+  }
+  .ka-shell.wide { max-width: 940px; }
+  .ka-brand {
+    display: inline-flex; align-items: center; gap: 12px;
+    margin-bottom: 14px;
+  }
+  .ka-logo {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, #5eead4, #38bdf8);
+    display: grid; place-items: center;
+    font-family: 'Outfit','Plus Jakarta Sans', sans-serif;
+    font-weight: 800; color: #0b1f2a; font-size: 22px;
+    box-shadow: 0 10px 30px -10px rgba(94,234,212,.6);
+  }
+  .ka-brand-name { font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
+  .ka-tag { color: rgba(230,233,255,.62); font-size: 14px; margin-bottom: 28px; }
+  .ka-card {
+    background: rgba(15,12,40,.65);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    padding: 22px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,.6);
+  }
+  .ka-tabs {
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: rgba(255,255,255,.05);
+    border-radius: 999px;
+    padding: 4px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .ka-tab {
+    background: transparent; border: none; color: rgba(230,233,255,.65);
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    padding: 10px 0; border-radius: 999px; cursor: pointer;
+    transition: color .2s ease;
+  }
+  .ka-tab.on { color: #fff; background: rgba(255,255,255,.08); }
+  .ka-field {
+    display: block; width: 100%;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-family: inherit; font-size: 15px; color: #fff;
+    margin-bottom: 10px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .ka-field::placeholder { color: rgba(230,233,255,.4); }
+  .ka-field:focus { outline: none; border-color: rgba(94,234,212,.45); box-shadow: 0 0 0 3px rgba(94,234,212,.12); }
+  .ka-cta {
+    width: 100%;
+    background: linear-gradient(135deg, #5eead4 0%, #38bdf8 100%);
+    color: #0b1f2a; font-weight: 700; font-size: 15px;
+    border: none; border-radius: 12px;
+    padding: 14px 18px;
+    cursor: pointer; margin-top: 4px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform .12s ease, box-shadow .2s ease;
+    box-shadow: 0 12px 30px -10px rgba(94,234,212,.55);
+  }
+  .ka-cta:hover { transform: translateY(-1px); box-shadow: 0 16px 36px -10px rgba(94,234,212,.65); }
+  .ka-cta:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+  .ka-ghost {
+    background: transparent; color: rgba(230,233,255,.72);
+    border: none; padding: 12px 16px;
+    font-family: inherit; font-size: 14px; cursor: pointer;
+  }
+  .ka-ghost:hover { color: #fff; }
+  .ka-err { color: #fca5a5; font-size: 13px; margin-top: 6px; }
+  .ka-foot {
+    margin-top: 12px; font-size: 12px;
+    color: rgba(230,233,255,.45);
+  }
+  .ka-foot b { color: #5eead4; }
+
+  /* Onboarding map */
+  .ka-onb-head { text-align: left; }
+  .ka-onb-head h1 { margin: 0 0 6px; font-size: 30px; font-weight: 700; letter-spacing: -.02em; font-family: 'Plus Jakarta Sans','Outfit', sans-serif; }
+  .ka-onb-head p { margin: 0; color: rgba(230,233,255,.65); font-size: 15px; }
+  .ka-progress { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+  .ka-progress .bar { flex: 1; height: 6px; background: rgba(255,255,255,.08); border-radius: 999px; overflow: hidden; }
+  .ka-progress .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #5eead4, #38bdf8); transform-origin: left; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+  .ka-progress .pct { color: rgba(230,233,255,.7); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .ka-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-top: 22px; text-align: left;
+  }
+  .ka-tile {
+    background: rgba(15,12,40,.55);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+    padding: 20px;
+    cursor: pointer;
+    transition: transform .15s, border-color .2s, box-shadow .25s;
+    position: relative;
+  }
+  .ka-tile:hover { transform: translateY(-2px); border-color: rgba(94,234,212,.32); box-shadow: 0 16px 36px -16px rgba(94,234,212,.35); }
+  .ka-tile.done { border-color: rgba(94,234,212,.4); background: rgba(20,40,52,.55); }
+  .ka-tile.active { border-color: rgba(94,234,212,.5); box-shadow: 0 0 0 1px rgba(94,234,212,.22), 0 16px 36px -16px rgba(94,234,212,.4); }
+  .ka-tile-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .ka-tile-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(230,233,255,.45); letter-spacing: .08em; }
+  .ka-tile h3 { margin: 4px 0 6px; font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+  .ka-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.06);
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; letter-spacing: .03em;
+    color: rgba(230,233,255,.75);
+  }
+  .ka-chip-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(230,233,255,.5); }
+  .ka-chip.done { color: #5eead4; background: rgba(94,234,212,.12); }
+  .ka-chip.done .ka-chip-dot { background: #5eead4; box-shadow: 0 0 0 3px rgba(94,234,212,.18); }
+  .ka-chip.active { color: #38bdf8; background: rgba(56,189,248,.12); }
+  .ka-chip.active .ka-chip-dot { background: #38bdf8; }
+  .ka-tile-sub { color: rgba(230,233,255,.7); font-size: 13px; margin: 0 0 6px; }
+  .ka-tile-desc { color: rgba(230,233,255,.55); font-size: 13px; margin: 0 0 14px; line-height: 1.5; }
+  .ka-tile-meta { display: flex; gap: 14px; font-size: 12px; color: rgba(230,233,255,.55); }
+  .ka-tile-meta b { color: rgba(230,233,255,.85); }
+  .ka-foot-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 22px;
+  }
+  .ka-foot-row .ka-cta { width: auto; padding: 12px 22px; }
+
+  /* Test runner */
+  .ka-run-top {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: rgba(230,233,255,.55); letter-spacing: .08em;
+    margin-bottom: 18px;
+  }
+  .ka-run-prompt { color: #5eead4; font-size: 13px; letter-spacing: .05em; text-transform: uppercase; }
+  .ka-run-q { font-size: 30px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; margin: 8px 0 28px; text-align: left; font-family: 'Plus Jakarta Sans','Outfit',sans-serif; }
+  .ka-opts { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .ka-opt {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all .15s ease;
+    font-family: inherit; color: #e6e9ff; font-size: 15px;
+    text-align: left;
+  }
+  .ka-opt:hover { border-color: rgba(94,234,212,.32); background: rgba(94,234,212,.05); }
+  .ka-opt.on {
+    border-color: rgba(94,234,212,.6);
+    background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(56,189,248,.12));
+    box-shadow: 0 0 0 1px rgba(94,234,212,.22);
+  }
+  .ka-opt-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,255,255,.08); color: rgba(230,233,255,.75);
+    display: grid; place-items: center;
+    font-size: 13px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .ka-opt.on .ka-opt-num { background: #5eead4; color: #0b1f2a; }
+  .ka-opt-label { flex: 1; }
+  .ka-opt-emoji { font-size: 22px; opacity: .8; }
+  .ka-run-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; }
+  .ka-run-foot .ka-ghost.center { flex: 1; text-align: center; }
+
+  @media (max-width: 720px) {
+    .ka-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div id="kairos-auth" style="display:none">
+  <div class="ka-stage" id="ka-stage"></div>
+</div>
+
+<script>
+(function(){
+  const API = window.KAIROS_API_URL || 'http://127.0.0.1:8787';
+  const root = document.getElementById('kairos-auth');
+  const stage = document.getElementById('ka-stage');
+
+  // ── State persistence ────────────────────────────────────
+  const PROFILE_KEY = 'kairos_profile';
+  const ASSESS_KEY = 'kairos_assessments';
+  const ONB_SKIP_KEY = 'kairos_onb_skipped';
+
+  function getProfile(){ try { return JSON.parse(sessionStorage.getItem(PROFILE_KEY) || 'null'); } catch { return null; } }
+  function setProfile(p){ sessionStorage.setItem(PROFILE_KEY, JSON.stringify(p)); }
+  function getAssessments(){ try { return JSON.parse(sessionStorage.getItem(ASSESS_KEY) || '{}'); } catch { return {}; } }
+  function setAssessment(kind, data){
+    const cur = getAssessments(); cur[kind] = data;
+    sessionStorage.setItem(ASSESS_KEY, JSON.stringify(cur));
+  }
+
+  // ── Test definitions (cargadas del backend) ──────────────
+  let TESTS = null;
+  const TEST_META = [
+    { id: 'phq9',   num: '01' },
+    { id: 'gad7',   num: '02' },
+    { id: 'habits', num: '03' },
+    { id: 'screen', num: '04' },
+  ];
+
+  async function api(path, body){
+    const opts = { method: body ? 'POST' : 'GET', headers: {'Content-Type':'application/json'} };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(API + path, opts);
+    if (!r.ok) {
+      const txt = await r.text().catch(()=> '');
+      throw new Error(`${r.status} ${txt}`);
+    }
+    return r.json();
+  }
+
+  // ── Routing ──────────────────────────────────────────────
+  function showRoot(){
+    root.style.display = 'flex';
+    document.body.classList.add('kairos-auth-open');
+  }
+  function hideRoot(){
+    root.style.display = 'none';
+    document.body.classList.remove('kairos-auth-open');
+  }
+  async function start(){
+    const profile = getProfile();
+    if (!profile){ renderLogin(); showRoot(); return; }
+    // Cargar definición de tests si no la tenemos
+    if (!TESTS){
+      try { TESTS = await api('/onboarding/tests'); } catch (e){ TESTS = {}; }
+    }
+    const done = getAssessments();
+    const allDone = TEST_META.every(t => done[t.id]);
+    const skipped = sessionStorage.getItem(ONB_SKIP_KEY) === '1';
+    if (allDone || skipped){ hideRoot(); return; }
+    renderOnboarding();
+    showRoot();
+  }
+
+  // ── Login screen ─────────────────────────────────────────
+  function renderLogin(){
+    let tab = 'login';
+    stage.innerHTML = '';
+    const shell = document.createElement('div');
+    shell.className = 'ka-shell';
+    shell.innerHTML = `
+      <div class="ka-brand">
+        <div class="ka-logo">K</div>
+        <div class="ka-brand-name">Kairós</div>
+      </div>
+      <div class="ka-tag">Tu copiloto de bienestar digital</div>
+      <div class="ka-card">
+        <div class="ka-tabs" role="tablist">
+          <button class="ka-tab on" data-tab="login">Iniciar sesión</button>
+          <button class="ka-tab" data-tab="signup">Registrarse</button>
+        </div>
+        <input class="ka-field" id="ka-email" type="email" placeholder="tu@email.com" autocomplete="email" />
+        <input class="ka-field" id="ka-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password" />
+        <button class="ka-cta" id="ka-submit">
+          <span id="ka-submit-label">Entrar</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+        <div class="ka-err" id="ka-err"></div>
+        <div class="ka-foot"><b>Modo mock activo</b> · cualquier email válido y contraseña de 6+ caracteres entra</div>
+      </div>
+    `;
+    stage.appendChild(shell);
+
+    const tabs = shell.querySelectorAll('.ka-tab');
+    const label = shell.querySelector('#ka-submit-label');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('on'));
+      t.classList.add('on');
+      tab = t.dataset.tab;
+      label.textContent = tab === 'login' ? 'Entrar' : 'Crear cuenta';
+    }));
+
+    const submit = shell.querySelector('#ka-submit');
+    const email = shell.querySelector('#ka-email');
+    const pass = shell.querySelector('#ka-pass');
+    const err = shell.querySelector('#ka-err');
+
+    async function doSubmit(){
+      err.textContent = '';
+      const e = email.value.trim();
+      const p = pass.value;
+      if (!e.includes('@') || !e.split('@')[1].includes('.')){ err.textContent = 'Email inválido'; return; }
+      if (p.length < 6){ err.textContent = 'Contraseña debe tener 6+ caracteres'; return; }
+      submit.disabled = true; label.textContent = '…';
+      try {
+        const profile = await api('/auth/mock-login', { email: e, password: p });
+        setProfile(profile);
+        await start();
+      } catch (ex){
+        err.textContent = 'No pude conectar con el servidor (' + ex.message + ')';
+      } finally {
+        submit.disabled = false; label.textContent = tab === 'login' ? 'Entrar' : 'Crear cuenta';
+      }
+    }
+    submit.addEventListener('click', doSubmit);
+    [email, pass].forEach(i => i.addEventListener('keydown', ev => { if (ev.key === 'Enter') doSubmit(); }));
+    setTimeout(() => email.focus(), 100);
+  }
+
+  // ── Onboarding map ───────────────────────────────────────
+  function renderOnboarding(){
+    const profile = getProfile() || {};
+    const done = getAssessments();
+    const completedCount = TEST_META.filter(t => done[t.id]).length;
+    const pct = completedCount / TEST_META.length;
+    const next = TEST_META.find(t => !done[t.id]) || TEST_META[0];
+    const firstName = (profile.name || profile.email || '').split('@')[0].split(' ')[0];
+
+    stage.innerHTML = '';
+    const shell = document.createElement('div');
+    shell.className = 'ka-shell wide';
+    shell.innerHTML = `
+      <div class="ka-onb-head">
+        <h1>Hola${firstName ? ', ' + firstName : ''}.</h1>
+        <p>Antes de empezar a recopilar tu día, te pido unas preguntas cortas. Son tests validados — me ayudan a entender desde dónde partes. Puedes pausar y retomar; guardamos tu progreso.</p>
+        <div class="ka-progress">
+          <div class="bar"><i style="transform:scaleX(${pct})"></i></div>
+          <div class="pct">${completedCount}/${TEST_META.length} · ${Math.round(pct*100)}%</div>
+        </div>
+      </div>
+      <div class="ka-grid" id="ka-grid"></div>
+      <div class="ka-foot-row">
+        <button class="ka-ghost" id="ka-skip">Omitir por ahora</button>
+        <button class="ka-cta" id="ka-next">
+          ${completedCount === 0 ? 'Comenzar con ' + (TESTS && TESTS[next.id] ? TESTS[next.id].title : next.id.toUpperCase())
+            : completedCount === TEST_META.length ? 'Volver a empezar'
+            : 'Continuar con ' + (TESTS && TESTS[next.id] ? TESTS[next.id].title : next.id.toUpperCase())}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    `;
+    stage.appendChild(shell);
+
+    const grid = shell.querySelector('#ka-grid');
+    TEST_META.forEach((meta, i) => {
+      const t = TESTS && TESTS[meta.id];
+      const status = done[meta.id] ? 'done' : (meta.id === next.id ? 'active' : 'pending');
+      const tile = document.createElement('div');
+      tile.className = 'ka-tile ' + (status === 'done' ? 'done' : status === 'active' ? 'active' : '');
+      tile.innerHTML = `
+        <div class="ka-tile-head">
+          <div>
+            <div class="ka-tile-num">${meta.num}</div>
+            <h3>${t ? t.title : meta.id.toUpperCase()}</h3>
+            <p class="ka-tile-sub">${t ? t.subtitle : ''}</p>
+          </div>
+          <span class="ka-chip ${status}">
+            <span class="ka-chip-dot"></span>
+            ${status === 'done' ? 'Completo' : status === 'active' ? 'Siguiente' : 'Pendiente'}
+          </span>
+        </div>
+        <p class="ka-tile-desc">${descFor(meta.id)}</p>
+        <div class="ka-tile-meta">
+          <span><b>${t ? t.num_questions : '·'}</b> preguntas</span>
+          <span>~${meta.id === 'habits' || meta.id === 'screen' ? '1 min' : '2 min'}</span>
+        </div>
+      `;
+      tile.addEventListener('click', () => renderRunner(meta.id));
+      grid.appendChild(tile);
+    });
+
+    shell.querySelector('#ka-skip').addEventListener('click', () => {
+      sessionStorage.setItem(ONB_SKIP_KEY, '1');
+      finishOnboarding();
+    });
+    shell.querySelector('#ka-next').addEventListener('click', () => {
+      const target = TEST_META.find(t => !done[t.id]) || TEST_META[0];
+      renderRunner(target.id);
+    });
+  }
+
+  function descFor(id){
+    return ({
+      phq9:   'Para que los agentes entiendan tu estado emocional actual.',
+      gad7:   'Para detectar señales de estrés y ansiedad sin etiquetas.',
+      habits: 'Para entender tus patrones de sueño, energía y rutinas.',
+      screen: 'Para tener una foto rápida de tu uso digital actual.',
+    })[id] || '';
+  }
+
+  // ── Test runner ──────────────────────────────────────────
+  function renderRunner(kind){
+    const t = TESTS && TESTS[kind];
+    if (!t){ renderOnboarding(); return; }
+    let idx = 0;
+    const answers = new Array(t.questions.length).fill(null);
+
+    function paint(){
+      stage.innerHTML = '';
+      const shell = document.createElement('div');
+      shell.className = 'ka-shell';
+      const q = t.questions[idx];
+      const opts = t.options;
+      const sel = answers[idx];
+      shell.innerHTML = `
+        <div class="ka-run-top">
+          <span>${t.title} · ${t.subtitle.toUpperCase()}</span>
+          <span>${idx+1} / ${t.questions.length}</span>
+        </div>
+        <div class="ka-progress" style="margin-bottom: 26px">
+          <div class="bar"><i style="transform:scaleX(${(idx+1)/t.questions.length})"></i></div>
+        </div>
+        <div class="ka-card">
+          <div class="ka-run-prompt">${t.prompt}</div>
+          <div class="ka-run-q">${q}</div>
+          <div class="ka-opts" id="ka-opts"></div>
+        </div>
+        <div class="ka-run-foot">
+          <button class="ka-ghost" id="ka-back">← Atrás</button>
+          <button class="ka-ghost center" id="ka-skip-test">Omitir por ahora</button>
+          <button class="ka-cta" id="ka-fwd" ${sel === null ? 'disabled' : ''}>
+            ${idx === t.questions.length - 1 ? 'Terminar' : 'Siguiente'}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      `;
+      stage.appendChild(shell);
+      const list = shell.querySelector('#ka-opts');
+      opts.forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'ka-opt' + (answers[idx] === o.v ? ' on' : '');
+        b.innerHTML = `
+          <span class="ka-opt-num">${o.v}</span>
+          <span class="ka-opt-label">${o.label}</span>
+          <span class="ka-opt-emoji">${o.emoji || ''}</span>
+        `;
+        b.addEventListener('click', () => {
+          answers[idx] = o.v;
+          paint();
+        });
+        list.appendChild(b);
+      });
+      shell.querySelector('#ka-back').addEventListener('click', () => {
+        if (idx > 0){ idx--; paint(); }
+        else renderOnboarding();
+      });
+      shell.querySelector('#ka-skip-test').addEventListener('click', renderOnboarding);
+      const fwd = shell.querySelector('#ka-fwd');
+      fwd.addEventListener('click', async () => {
+        if (answers[idx] === null) return;
+        if (idx < t.questions.length - 1){ idx++; paint(); return; }
+        // Último → enviar
+        fwd.disabled = true;
+        await submitTest(kind, answers);
+      });
+    }
+    paint();
+  }
+
+  async function submitTest(kind, answers){
+    const profile = getProfile() || {};
+    const payload = {
+      profile_id: profile.id || '00000000-0000-0000-0000-000000000000',
+      kind,
+      answers: answers.map((v, i) => ({ key: `q${i}`, value: v })),
+    };
+    try {
+      const res = await api('/onboarding/submit', payload);
+      setAssessment(kind, { score: res.score, max_score: res.max_score, severity: res.severity });
+    } catch (ex){
+      // Modo demo offline — guardamos solo en sessionStorage
+      const max = (TESTS[kind].num_questions || answers.length) * 3;
+      const total = answers.reduce((a,b)=>a+(b||0),0);
+      setAssessment(kind, { score: total, max_score: max, severity: 'unknown' });
+    }
+    renderOnboarding();
+  }
+
+  function finishOnboarding(){
+    // Construye un resumen breve para que el Core lo lea
+    const all = getAssessments();
+    const labels = { minimal:'mínimo', mild:'leve', moderate:'moderado', moderately_severe:'moderadamente severo', severe:'severo', unknown:'sin medir' };
+    const titleMap = { phq9: 'PHQ-9 (ánimo)', gad7: 'GAD-7 (ansiedad)', habits: 'hábitos digitales', screen: 'uso de pantalla' };
+    const parts = TEST_META
+      .filter(t => all[t.id])
+      .map(t => `${titleMap[t.id]} = ${all[t.id].score}/${all[t.id].max_score} → ${labels[all[t.id].severity] || all[t.id].severity}`);
+    const ctx = parts.length ? 'Baseline del usuario (onboarding):\n- ' + parts.join('\n- ') : null;
+    if (ctx) sessionStorage.setItem('kairos_baseline_context', ctx);
+    hideRoot();
+  }
+
+  // Expone API para que el dashboard pueda leer
+  window.kairosAuth = {
+    profile: () => getProfile(),
+    baselineContext: () => sessionStorage.getItem('kairos_baseline_context'),
+    logout: () => {
+      sessionStorage.removeItem(PROFILE_KEY);
+      sessionStorage.removeItem(ASSESS_KEY);
+      sessionStorage.removeItem(ONB_SKIP_KEY);
+      sessionStorage.removeItem('kairos_baseline_context');
+      sessionStorage.removeItem('kairos_state_v2');
+      location.reload();
+    },
+    restart: start,
+  };
+
+  // Si el usuario completa onboarding, registrar acción
+  const origSetAssess = setAssessment;
+  // Auto-finalizar cuando estén los 4
+  const observe = () => {
+    const done = getAssessments();
+    if (TEST_META.every(t => done[t.id])) {
+      finishOnboarding();
+      return true;
+    }
+    return false;
+  };
+  // Hook: tras submit redibujar y si ya está todo, finalizar
+  const originalRender = renderOnboarding;
+  // Iniciar
+  document.addEventListener('DOMContentLoaded', start);
+  if (document.readyState !== 'loading') start();
+})();
+</script>
+
 </body>
 </html>
