@@ -67,3 +67,8 @@ alter table habits
 
 alter table habit_logs
   add column if not exists profile_id uuid references profiles(id) on delete cascade;
+
+-- ─── Permisos para service_role ──────────────────────────────
+grant usage on schema public to service_role;
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;
