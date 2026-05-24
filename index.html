@@ -2744,6 +2744,9 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       </div>
     </section>
 
+    <!-- Recomendaciones Kairós (populated by KairosLive after check-in) -->
+    <div id="kl-recs-section"></div>
+
     <!-- Insight card from Kairós -->
     <section class="insight fade d5" aria-label="Insight de Kairós">
       <div class="ai">
@@ -4026,9 +4029,14 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       state.coreSynthesis = null;
       save();
       apiSynthesize(transcript).then(res => {
-        state.coreSynthesis = res.summary;
-        state.agentReadings = res.specialists;
+        state.coreSynthesis    = res.summary;
+        state.agentReadings    = res.specialists;
+        state.compositeScore   = res.composite_score;
+        state.mlPrediction     = res.ml_prediction;
+        state.diagnosis        = res.diagnosis;
+        state.solution         = res.solution;
         save();
+        refreshAnalytics();
       }).catch(err => console.warn('[kairos] síntesis falló:', err));
     }
     divider('Listo');
@@ -4083,9 +4091,14 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       const tp = typing();
       apiSynthesize(state.lastTranscript).then(res => {
         tp.remove();
-        state.coreSynthesis = res.summary;
-        state.agentReadings = res.specialists;
+        state.coreSynthesis  = res.summary;
+        state.agentReadings  = res.specialists;
+        state.compositeScore = res.composite_score;
+        state.mlPrediction   = res.ml_prediction;
+        state.diagnosis      = res.diagnosis;
+        state.solution       = res.solution;
         save();
+        refreshAnalytics();
         bubble('bot', res.summary, { agent: 'Kairós Core', color: '#c4b5fd' });
         kairosHistory.push({ role: 'assistant', content: res.summary });
         renderKairosFreeform();
@@ -4770,6 +4783,61 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
 
   /* ═══════════ ROUTER ═══════════ */
   const NAV_TO_INDEX = { dashboard:0, chat:1, habitos:2, agentes:3, herramientas:4, analytics:5, ajustes:6 };
+  // ── Analytics live update ──────────────────────────────────────────────────
+  const AGENT_COLORS = { animo:'#fb7185', sueno:'#60a5fa', foco:'#a78bfa', energia:'#84cc16', pantalla:'#10b981', rachas:'#f59e0b' };
+  const AGENT_ABBR   = { animo:'Á', sueno:'S', foco:'F', energia:'E', pantalla:'P', rachas:'R' };
+
+  function refreshAnalytics() {
+    const score    = state.compositeScore;
+    const readings = state.agentReadings;
+    const ml       = state.mlPrediction;
+    const diag     = state.diagnosis;
+    const sol      = state.solution;
+
+    // Score ring
+    if (score != null) {
+      const ring = document.querySelector('.an-ring');
+      const ringV = document.querySelector('.an-ring-v');
+      if (ring)  ring.style.setProperty('--pct', Math.round(score));
+      if (ringV) ringV.textContent = Math.round(score);
+    }
+
+    // Score tag + description
+    if (ml || diag) {
+      const tag = document.querySelector('.an-score-tag');
+      const h2  = document.querySelector('.an-score-info h2');
+      const p   = document.querySelector('.an-score-info p');
+      if (tag && ml) {
+        const risk = ml.risk_level || ml.risk || 'bajo';
+        const riskLabel = { bajo:'Riesgo bajo', moderado:'Riesgo moderado', alto:'Riesgo alto' }[risk] || risk;
+        tag.textContent = `Score de bienestar · hoy · ${riskLabel}`;
+      }
+      if (h2 && diag && diag.patterns && diag.patterns.length) {
+        const mainPattern = diag.patterns[0];
+        const labels = { distres_severo:'Estrés elevado detectado', distres_moderado:'Señales de estrés moderado', distres_leve:'Estrés leve', fatiga_digital:'Fatiga digital', uso_digital_elevado:'Alto uso digital', privacion_sueno:'Privación de sueño', sueno_deficiente:'Calidad de sueño baja', baja_energia:'Energía reducida', deficit_foco:'Déficit de foco', dependencia_redes:'Uso excesivo de redes', bienestar_en_rango:'Todo en rango normal' };
+        h2.textContent = labels[mainPattern] || 'Análisis del día completado.';
+      }
+      if (p && sol && sol.steps && sol.steps.length) {
+        p.textContent = sol.steps.slice(0, 2).join(' · ');
+      }
+    }
+
+    // Agent deltas
+    if (readings && readings.length) {
+      const deltasEl = document.querySelector('.an-deltas');
+      if (deltasEl) {
+        deltasEl.innerHTML = readings
+          .filter(r => r.score != null)
+          .map(r => {
+            const color = AGENT_COLORS[r.agent] || '#8b5cf6';
+            const abbr  = AGENT_ABBR[r.agent] || r.agent[0].toUpperCase();
+            const cls   = r.score >= 65 ? 'up' : r.score >= 40 ? '' : 'down';
+            return `<span class="an-delta ${cls}"><span class="ag-mini" style="background:${color};font-size:9px;padding:2px 5px">${abbr}</span> ${Math.round(r.score)}/100</span>`;
+          }).join('');
+      }
+    }
+  }
+
   function showView(name){
     if (!name || !document.querySelector(`[data-view="${name}"]`)) name = 'dashboard';
     document.querySelectorAll('[data-view]').forEach(v => v.classList.toggle('view-active', v.dataset.view === name));
@@ -4784,6 +4852,8 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     window.scrollTo({ top: 0, behavior: 'instant' });
     // re-render agents board when entering /agentes (in case state changed)
     if (name === 'agentes') renderAgentsBoard();
+    // refresh analytics with live data when entering analytics
+    if (name === 'analytics') refreshAnalytics();
     // Update hash without triggering scroll
     if (location.hash.slice(1).split('?')[0] !== name){
       history.replaceState(null, '', '#' + name);
@@ -6196,15 +6266,21 @@ document.body.appendChild(mount);
     observer.observe(feed, { childList: true, subtree: true });
   }
 
+  function getRecsContainer() {
+    // Primary target: dashboard section (always visible after chat closes)
+    const dash = document.getElementById('kl-recs-section');
+    if (dash) return dash;
+    // Fallback: chat feed if open
+    return document.getElementById('kc-feed') || document.querySelector('.kc-feed');
+  }
+
   function hookSynthesizeButton() {
-    // Cuando el usuario termina el check-in → mostrar recomendaciones
+    // Cuando el usuario termina el check-in → mostrar recomendaciones en el dashboard
     document.addEventListener('click', async (e) => {
       const btn = e.target.closest('.kc-done, [data-action="synthesize"], .kc-finish button');
       if (!btn) return;
-      const feed = document.getElementById('kc-feed') || document.querySelector('.kc-feed');
-      if (feed) {
-        setTimeout(() => fetchAndShowRecommendations(feed), 2000);
-      }
+      // Fetch after chat closes (800ms) and inject into dashboard
+      setTimeout(() => fetchAndShowRecommendations(getRecsContainer()), 1200);
     });
 
     // También hook en "Dame un resumen" o "¿Cómo voy esta semana?"
@@ -6213,8 +6289,7 @@ document.body.appendChild(mount);
       if (!chip) return;
       const text = chip.textContent || '';
       if (/resumen|semana|mañana/i.test(text)) {
-        const feed = document.getElementById('kc-feed') || document.querySelector('.kc-feed');
-        if (feed) setTimeout(() => fetchAndShowRecommendations(feed), 3500);
+        setTimeout(() => fetchAndShowRecommendations(getRecsContainer()), 2000);
       }
     });
   }
