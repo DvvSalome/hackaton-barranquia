@@ -26,7 +26,7 @@
 .k-overlay{
   position:fixed; z-index:100;
   font-family: 'Inter',-apple-system,sans-serif;
-  color: var(--ink, #0f0a2e);
+  color: var(--ink, #0D0B1F);
 }
 
 /* ════════ CHAT OVERLAY ════════ */
@@ -74,7 +74,7 @@
   display:grid; place-items:center;
   transition: all .15s ease;
 }
-.kc-close:hover{background: rgba(15,10,46,.08); color:#0f0a2e}
+.kc-close:hover{background: rgba(15,10,46,.08); color:#0D0B1F}
 
 .kc-progress{
   height: 3px;
@@ -172,7 +172,7 @@
   border-radius: 999px;
   padding: 9px 14px;
   font-family: inherit; font-size: 13.5px; font-weight: 500;
-  color: #0f0a2e; cursor: pointer;
+  color: #0D0B1F; cursor: pointer;
   transition: all .15s ease;
   letter-spacing:-.01em;
 }
@@ -193,7 +193,7 @@
 .kc-input:focus-within{border-color: rgba(99,102,241,.4); box-shadow: 0 0 0 3px rgba(99,102,241,.08)}
 .kc-input input{
   flex:1; border:none; outline:none; background:transparent;
-  font-family: inherit; font-size: 13.5px; color: #0f0a2e;
+  font-family: inherit; font-size: 13.5px; color: #0D0B1F;
   padding: 8px 0;
 }
 .kc-input input::placeholder{color: #8aa5a0}
@@ -240,7 +240,7 @@
   cursor:pointer; display:grid; place-items:center;
   transition: all .15s ease;
 }
-.kd-back:hover{background: rgba(15,10,46,.08); color:#0f0a2e}
+.kd-back:hover{background: rgba(15,10,46,.08); color:#0D0B1F}
 .kd-crumb{font-size:13px; color:#7a6c9e; font-weight:500}
 
 .kd-body{
@@ -355,7 +355,7 @@
   border:none; background: rgba(15,10,46,.04); color: #7a6c9e;
   cursor:pointer; display:grid; place-items:center;
 }
-.km-close:hover{background: rgba(15,10,46,.08); color:#0f0a2e}
+.km-close:hover{background: rgba(15,10,46,.08); color:#0D0B1F}
 .km-tag{
   display:inline-block; font-size: 10px;
   padding: 4px 8px; border-radius: 5px;
@@ -401,7 +401,7 @@
 
 /* ════════ COMPLETED CHECK-IN VARIANTS ════════ */
 .checkin-done{
-  background: linear-gradient(135deg, #2e1065 0%, #312e81 100%) !important;
+  background: linear-gradient(135deg, #1A1640 0%, #1E1B4B 100%) !important;
 }
 .checkin-done h2 em{
   background: linear-gradient(135deg, #a78bfa 0%, #c4b5fd 100%);
@@ -413,24 +413,24 @@
 }
 .cm-badge-ok::before{background: #a78bfa !important; box-shadow: 0 0 0 4px rgba(52,211,153,.2) !important; animation: none !important}
 .cm-chip-ok::before{box-shadow: 0 0 0 3px rgba(196,181,253,.15)}
-.cm-chip-ok{background: rgba(255,255,255,.08) !important}
+.cm-chip-ok{background: rgba(255,255,255,0.07) !important}
 
 /* ════════ DEEP THEME overlay overrides ════════ */
-body.theme-deep .k-chat{background: linear-gradient(180deg,#0a2e2a,#1a1740); border-left-color: rgba(255,255,255,.08)}
-body.theme-deep .kc-bubble.bot .kc-text{background:#2d2469; border-color: rgba(255,255,255,.08); color:#f5f3ff}
-body.theme-deep .kc-foot{background: rgba(10,46,42,.7); border-top-color: rgba(255,255,255,.06)}
-body.theme-deep .kc-chip{background:#2d2469; color:#f5f3ff; border-color: rgba(255,255,255,.08)}
+body.theme-deep .k-chat{background: linear-gradient(180deg,#0D0B1F,#1A1640); border-left-color: rgba(255,255,255,.07)}
+body.theme-deep .kc-bubble.bot .kc-text{background:#1A1640; border-color: rgba(255,255,255,0.07); color:#f5f3ff}
+body.theme-deep .kc-foot{background: rgba(13,11,31,.85); border-top-color: rgba(255,255,255,.07)}
+body.theme-deep .kc-chip{background:#1A1640; color:#f5f3ff; border-color: rgba(255,255,255,0.07)}
 body.theme-deep .kc-chip:hover{background: linear-gradient(135deg, rgba(196,181,253,.15), rgba(99,102,241,.1)); border-color: rgba(196,181,253,.3)}
-body.theme-deep .kc-input{background:#2d2469; border-color: rgba(255,255,255,.08)}
+body.theme-deep .kc-input{background:#1A1640; border-color: rgba(255,255,255,0.07)}
 body.theme-deep .kc-input input{color:#f5f3ff}
-body.theme-deep .kc-close, body.theme-deep .kd-back{background: rgba(255,255,255,.06); color: #c7d2fe}
-body.theme-deep .kc-head, body.theme-deep .kd-head{border-bottom-color: rgba(255,255,255,.06)}
-body.theme-deep .k-drawer{background:#14102d}
-body.theme-deep .kd-link, body.theme-deep .km-body{background:#2a1f5d; border-color: rgba(255,255,255,.08); color:#f5f3ff}
-body.theme-deep .kd-event{border-bottom-color: rgba(255,255,255,.06)}
-body.theme-deep .kd-tx{color:#c7d2fe}
+body.theme-deep .kc-close, body.theme-deep .kd-back{background: rgba(255,255,255,0.07); color: #A09DC0}
+body.theme-deep .kc-head, body.theme-deep .kd-head{border-bottom-color: rgba(255,255,255,0.07)}
+body.theme-deep .k-drawer{background:#0D0B1F}
+body.theme-deep .kd-link, body.theme-deep .km-body{background:#1A1640; border-color: rgba(255,255,255,0.07); color:#f5f3ff}
+body.theme-deep .kd-event{border-bottom-color: rgba(255,255,255,0.07)}
+body.theme-deep .kd-tx{color:#A09DC0}
 body.theme-deep .km-body h2{color:#f8f7ff}
-body.theme-deep .km-body p{color:#c7d2fe}
+body.theme-deep .km-body p{color:#A09DC0}
 
 /* Small screens — overlay full-width */
 @media (max-width: 640px){
@@ -507,9 +507,9 @@ body.theme-deep .km-body p{color:#c7d2fe}
 .ab-card:hover{transform: translateY(-2px); border-color: color-mix(in oklab, var(--c) 35%, transparent); box-shadow: 0 18px 36px -22px color-mix(in oklab, var(--c) 50%, transparent)}
 .ab-card.principal{
   grid-column: 1 / -1;
-  background: linear-gradient(135deg, #2a1f5d 0%, #312e81 100%);
-  color: #f5f3ff;
-  border-color: rgba(196,181,253,.18);
+  background: linear-gradient(135deg, #1A1640 0%, #1E1B4B 100%);
+  color: #F8F7FF;
+  border-color: rgba(124,111,224,.2);
   padding: 20px 22px 18px;
 }
 .ab-card.principal::before{
@@ -567,7 +567,7 @@ body.theme-deep .km-body p{color:#c7d2fe}
   overflow: hidden;
   margin: 6px 0 12px;
 }
-.ab-card.principal .ab-card-meter{background: rgba(255,255,255,.08)}
+.ab-card.principal .ab-card-meter{background: rgba(255,255,255,0.07)}
 .ab-card-meter-fill{
   height: 100%;
   border-radius: 2px;
@@ -695,11 +695,11 @@ body.theme-deep .kc-finish .kc-done.ghost{background: rgba(196,181,253,.1); colo
 .kd-flist li.ok .ic{background: rgba(139,92,246,.15); color: #7c3aed}
 .kd-flist li.miss .ic{background: transparent; color: #7a6c9e; border: 1px dashed rgba(15,10,46,.18)}
 
-body.theme-deep .ab-card{background:#2a1f5d; border-color: rgba(255,255,255,.08)}
+body.theme-deep .ab-card{background:#1A1640; border-color: rgba(255,255,255,0.07)}
 body.theme-deep .ab-card-role{color: rgba(236,253,245,.5)}
 body.theme-deep .ab-info-list li{color: rgba(236,253,245,.75)}
-body.theme-deep .ab-detail{border-color: rgba(255,255,255,.08); color: rgba(236,253,245,.6)}
-body.theme-deep .kd-flist li{color: #c7d2fe}
+body.theme-deep .ab-detail{border-color: rgba(255,255,255,0.07); color: rgba(236,253,245,.6)}
+body.theme-deep .kd-flist li{color: #A09DC0}
 body.theme-deep .kd-flist li.miss{color: rgba(236,253,245,.45)}
 
 /* ════════ MULTI-VIEW ROUTER ════════ */
@@ -1037,8 +1037,8 @@ body[data-view]:not([data-view="dashboard"]) aside.right{
 .an-score{
   display: grid; grid-template-columns: auto 1fr;
   gap: 28px; align-items: center;
-  background: linear-gradient(135deg, #2a1f5d 0%, #312e81 100%);
-  color: #f5f3ff;
+  background: linear-gradient(135deg, #1A1640 0%, #1E1B4B 100%);
+  color: #F8F7FF;
   border-radius: 28px;
   padding: 30px 34px;
   margin-bottom: 28px;
@@ -1054,7 +1054,7 @@ body[data-view]:not([data-view="dashboard"]) aside.right{
 .an-score > *{position: relative}
 .an-ring{
   width: 160px; height: 160px; border-radius: 50%;
-  background: conic-gradient(#c4b5fd calc(var(--pct) * 1%), rgba(255,255,255,.08) 0);
+  background: conic-gradient(#c4b5fd calc(var(--pct) * 1%), rgba(255,255,255,0.07) 0);
   display: grid; place-items: center;
   position: relative; flex-shrink: 0;
 }
@@ -1090,7 +1090,7 @@ body[data-view]:not([data-view="dashboard"]) aside.right{
 .an-delta{
   font-size: 12px; font-weight: 600;
   padding: 5px 10px; border-radius: 999px;
-  background: rgba(255,255,255,.08);
+  background: rgba(255,255,255,0.07);
   color: #f5f3ff;
 }
 .an-delta.up{background: rgba(196,181,253,.15); color: #c4b5fd}
@@ -1236,7 +1236,7 @@ body.theme-deep .hb-stat,
 body.theme-deep .hb-row,
 body.theme-deep .an-corr,
 body.theme-deep .an-trend,
-body.theme-deep .set-group{background:#2a1f5d; border-color: rgba(255,255,255,.08)}
+body.theme-deep .set-group{background:#1A1640; border-color: rgba(255,255,255,0.07)}
 body.theme-deep .hr-tab.active{background:#c4b5fd; color:#1e1b4b}
 body.theme-deep .hr-card-desc,
 body.theme-deep .an-corr-h,
@@ -1246,10 +1246,10 @@ body.theme-deep .hr-featured h2,
 body.theme-deep .set-n,
 body.theme-deep .an-trend-h b{color:#f8f7ff}
 body.theme-deep .hb-check{border-color: rgba(255,255,255,.15)}
-body.theme-deep .hb-week .d{background: rgba(255,255,255,.06); color: rgba(236,253,245,.5)}
-body.theme-deep .set-row{border-top-color: rgba(255,255,255,.06)}
+body.theme-deep .hb-week .d{background: rgba(255,255,255,0.07); color: rgba(236,253,245,.5)}
+body.theme-deep .set-row{border-top-color: rgba(255,255,255,0.07)}
 body.theme-deep .set-toggle{background: rgba(255,255,255,.12)}
-body.theme-deep .hr-btn{background:#2a1f5d; color:#f5f3ff}
+body.theme-deep .hr-btn{background:#1A1640; color:#f5f3ff}
 body.theme-deep .view-head h1{color:#f8f7ff}
 
 /* ════════ THEME TOGGLE (topbar) ════════ */
@@ -1275,7 +1275,7 @@ body.theme-deep .view-head h1{color:#f8f7ff}
   content:""; position:absolute; inset:0;
   background:
     radial-gradient(50% 90% at 80% 50%, rgba(167,139,250,.55), transparent 70%),
-    linear-gradient(135deg, #1e1b4b, #2e1065);
+    linear-gradient(135deg, #1E1B4B, #1A1640);
   opacity:0; transition: opacity .35s ease;
 }
 .theme-toggle .tt-thumb{
@@ -1290,12 +1290,12 @@ body.theme-deep .view-head h1{color:#f8f7ff}
 }
 .theme-toggle .tt-thumb svg{transition: transform .5s ease}
 body.theme-deep .theme-toggle::after{opacity:1}
-body.theme-deep .theme-toggle{border-color: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(167,139,250,.3), 0 6px 18px -10px rgba(99,102,241,.6)}
+body.theme-deep .theme-toggle{border-color: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(124,111,224,.3), 0 6px 18px -10px rgba(124,111,224,.55)}
 body.theme-deep .theme-toggle .tt-thumb{
   left: 33px;
-  background: linear-gradient(135deg, #312e81, #1e1b4b 60%, #0f172a);
-  color:#c4b5fd;
-  box-shadow: 0 4px 14px -2px rgba(99,102,241,.6), inset 0 0 0 1px rgba(196,181,253,.35);
+  background: linear-gradient(135deg, #1E1B4B, #1A1640 60%, #0D0B1F);
+  color:#A78BFA;
+  box-shadow: 0 4px 14px -2px rgba(124,111,224,.55), inset 0 0 0 1px rgba(167,139,250,.3);
 }
 body.theme-deep .theme-toggle .tt-thumb svg{transform: rotate(180deg)}
 /* swap sun-to-moon glyph in dark mode using clip-path mask */
@@ -1306,7 +1306,7 @@ body.theme-deep .theme-toggle .tt-thumb .tt-sun{opacity:0}
   border-radius:50%;
   background: radial-gradient(circle at 35% 35%, transparent 0 35%, #c4b5fd 35% 100%);
   opacity:0; transition: opacity .35s ease;
-  box-shadow: inset -4px -3px 0 0 #312e81;
+  box-shadow: inset -4px -3px 0 0 #1E1B4B;
 }
 body.theme-deep .theme-toggle .tt-thumb::before{opacity:1}
 
@@ -1454,9 +1454,9 @@ body, .app, main, aside.right, .side,
   100% {transform: translate(-50%,-50%) rotate(calc(var(--a) + 360deg)) translateY(-110px) rotate(calc(-1 * (var(--a) + 360deg)))}
 }
 @keyframes orbitRot{to{transform: rotate(360deg)}}
-body.theme-deep .ag-orbit-ring{border-color: rgba(167,139,250,.4)}
-body.theme-deep .ag-orbit-ring.r2{border-color: rgba(167,139,250,.18)}
-body.theme-deep .ag-orbit-core{box-shadow: 0 0 0 6px rgba(46,16,101,.65), 0 18px 40px -10px rgba(139,92,246,.7), inset 0 0 0 1px rgba(196,181,253,.4)}
+body.theme-deep .ag-orbit-ring{border-color: rgba(124,111,224,.4)}
+body.theme-deep .ag-orbit-ring.r2{border-color: rgba(124,111,224,.18)}
+body.theme-deep .ag-orbit-core{box-shadow: 0 0 0 6px rgba(13,11,31,.7), 0 18px 40px -10px rgba(124,111,224,.65), inset 0 0 0 1px rgba(167,139,250,.4)}
 
 @media (max-width: 860px){
   .ag-head{grid-template-columns: 1fr}
@@ -1505,12 +1505,12 @@ body.theme-deep .ag-orbit-core{box-shadow: 0 0 0 6px rgba(46,16,101,.65), 0 18px
 @media (max-width: 800px){
   .ag-pillars{grid-template-columns: 1fr}
 }
-body.theme-deep .ag-pillar{background:#2a1f5d; border-color: rgba(167,139,250,.15)}
+body.theme-deep .ag-pillar{background:#1A1640; border-color: rgba(167,139,250,.15)}
 body.theme-deep .ag-pillar::before{background: linear-gradient(180deg,#a78bfa,#818cf8)}
 body.theme-deep .ag-pillar-h{color:#f8f7ff}
-body.theme-deep .ag-pillar-p{color:#c7d2fe}
+body.theme-deep .ag-pillar-p{color:#A09DC0}
 body.theme-deep .ag-head h1{color:#f8f7ff}
-body.theme-deep .ag-head p{color:#c7d2fe}
+body.theme-deep .ag-head p{color:#A09DC0}
 body.theme-deep .ag-head p b{color:#f8f7ff}
 
 /* Enhanced agent CTAs row */
@@ -1527,8 +1527,8 @@ body.theme-deep .ag-head p b{color:#f8f7ff}
 }
 .ab-cta.primary > *{position: relative; z-index: 1}
 .ab-cta.secondary{
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%) !important;
-  box-shadow: 0 18px 32px -16px rgba(30,27,75,.6), inset 0 0 0 1px rgba(167,139,250,.25) !important;
+  background: linear-gradient(135deg, #1A1640 0%, #1E1B4B 100%) !important;
+  box-shadow: 0 18px 32px -16px rgba(13,11,31,.7), inset 0 0 0 1px rgba(124,111,224,.2) !important;
 }
 .ab-cta.secondary::after{
   background: radial-gradient(60% 100% at 100% 0%, rgba(167,139,250,.3), transparent 60%) !important;
@@ -1590,7 +1590,7 @@ body.theme-deep .ag-head p b{color:#f8f7ff}
   background: rgba(15,10,46,.18); border-radius:3px;
 }
 .theme-tile.dark .theme-tile-preview{
-  background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%);
+  background: linear-gradient(135deg, #0D0B1F 0%, #1A1640 100%);
 }
 .theme-tile.dark .theme-tile-preview::before{
   content:""; position:absolute; top:8px; left:8px; right:8px; height:10px;
@@ -1633,19 +1633,36 @@ body.theme-deep .theme-tile-d{color:#a5b4fc}
   transition: background .45s ease, color .45s ease, border-color .45s ease, box-shadow .45s ease;
 }
 
-/* improved dark theme overrides — deeper, more purple */
-body.theme-deep{ color-scheme: dark }
+/* ── DARK THEME DESIGN TOKENS ─────────────────────── */
+body.theme-deep{
+  color-scheme: dark;
+  --bg:         #0D0B1F;
+  --bg-tint:    #1A1640;
+  --surface:    #1A1640;
+  --surface-2:  #1E1B4B;
+  --ink:        #F8F7FF;
+  --ink-2:      #A09DC0;
+  --muted:      #6B6890;
+  --line:       rgba(255,255,255,0.07);
+  --line-2:     rgba(255,255,255,0.04);
+  --teal-500:   #7C6FE0;
+  --teal-600:   #6B5FC0;
+  --teal-300:   #A78BFA;
+  --teal-700:   #5B4FA0;
+  --aqua-500:   #06B6D4;
+  --aqua-600:   #0891B2;
+}
 body.theme-deep .checkin{
-  background: linear-gradient(135deg, #2e1065 0%, #312e81 50%, #1e1b4b 100%) !important;
+  background: linear-gradient(135deg, #1A1640 0%, #1E1B4B 50%, #141230 100%) !important;
 }
 body.theme-deep .checkin::before{
   background:
-    radial-gradient(60% 90% at 0% 0%,   rgba(167,139,250,.35), transparent 60%),
-    radial-gradient(70% 90% at 100% 100%, rgba(99,102,241,.30), transparent 60%) !important;
+    radial-gradient(60% 90% at 0% 0%,   rgba(124,111,224,.3), transparent 60%),
+    radial-gradient(70% 90% at 100% 100%, rgba(6,182,212,.18), transparent 60%) !important;
 }
 body.theme-deep .topbar-actions .theme-toggle{}
-body.theme-deep .ambient::before{background: radial-gradient(circle, rgba(124,58,237,.55), transparent 70%); opacity:.5}
-body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,241,.55), transparent 70%); opacity:.5}
+body.theme-deep .ambient::before{background: radial-gradient(circle, rgba(124,111,224,.6), transparent 70%); opacity:.45}
+body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,241,.5), transparent 70%); opacity:.45}
 
 </style>
 <style>
@@ -1739,15 +1756,15 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   }
   body.theme-deep .grid-pattern{
     background-image:
-      linear-gradient(rgba(196,181,253,.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(196,181,253,.08) 1px, transparent 1px);
+      linear-gradient(rgba(124,111,224,.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,111,224,.07) 1px, transparent 1px);
     opacity: 1;
   }
   body.theme-deep .grid-pattern::before{
-    background-image: radial-gradient(circle, rgba(196,181,253,.22) 1.2px, transparent 1.6px);
+    background-image: radial-gradient(circle, rgba(124,111,224,.18) 1.2px, transparent 1.6px);
   }
   body.theme-deep .grid-pattern::after{
-    background-image: radial-gradient(rgba(167,139,250,.16) 2px, transparent 2.5px);
+    background-image: radial-gradient(rgba(6,182,212,.1) 2px, transparent 2.5px);
   }
   body.reduce-motion .grid-pattern, body.reduce-motion .grid-pattern::after{animation: none}
 
@@ -1763,11 +1780,11 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   }
   body.theme-deep{
     background:
-      radial-gradient(60% 70% at 10% 10%, rgba(167,139,250,.30), transparent 60%),
-      radial-gradient(50% 60% at 100% 30%, rgba(99,102,241,.30), transparent 65%),
-      radial-gradient(70% 60% at 50% 110%, rgba(217,70,239,.18), transparent 60%),
-      radial-gradient(40% 50% at 90% 90%, rgba(56,189,248,.20), transparent 65%),
-      linear-gradient(180deg, #0f0a2e 0%, #1a1140 60%, #0f0a2e 100%) !important;
+      radial-gradient(70% 80% at 75% 40%, rgba(124,111,224,.28), transparent 65%),
+      radial-gradient(50% 60% at 90% 10%, rgba(99,102,241,.22), transparent 60%),
+      radial-gradient(60% 55% at 15% 80%, rgba(124,111,224,.18), transparent 65%),
+      radial-gradient(40% 40% at 50% 100%, rgba(6,182,212,.12), transparent 60%),
+      linear-gradient(180deg, #0D0B1F 0%, #120F2A 55%, #0D0B1F 100%) !important;
     background-attachment: fixed !important;
   }
 
@@ -1793,7 +1810,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   .ambient .blob3{
     position:absolute; width:540px; height:540px; border-radius:50%;
     left: 35%; bottom: -220px;
-    background: radial-gradient(circle, rgba(217,70,239,.4) 0%, rgba(124,58,237,.2) 40%, transparent 70%);
+    background: radial-gradient(circle, rgba(6,182,212,.35) 0%, rgba(124,111,224,.18) 40%, transparent 70%);
     filter:blur(90px); opacity:.5;
     animation: ambientFloat3 32s ease-in-out infinite;
   }
@@ -1851,7 +1868,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     0%{transform: rotate(-12deg) translateX(-30%)}
     100%{transform: rotate(-12deg) translateX(30%)}
   }
-  body.theme-deep .ambient .blob3{background: radial-gradient(circle, rgba(217,70,239,.55) 0%, rgba(124,58,237,.25) 40%, transparent 70%); opacity:.55}
+  body.theme-deep .ambient .blob3{background: radial-gradient(circle, rgba(6,182,212,.35) 0%, rgba(124,111,224,.18) 40%, transparent 70%); opacity:.5}
   body.theme-deep .ambient .stars{opacity:1}
   body.theme-deep .ambient .beam{opacity:.7}
   body.reduce-motion .ambient *{animation: none !important}
@@ -2202,8 +2219,8 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   /* card to talk to Kairós */
   .chat-cta{
     display:flex;align-items:center;gap:12px;
-    background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 60%, #312e81 100%);
-    color: #f5f3ff;
+    background: linear-gradient(135deg, #1E1B4B 0%, #1A1640 60%, #231F5A 100%);
+    color: #F8F7FF;
     padding: 14px 16px;
     border-radius: 16px;
     margin-bottom: 22px;
@@ -2257,22 +2274,23 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
 
   /* theme: deep */
   body.theme-deep{
-    --bg:#14102d; --bg-tint:#221554; --surface:#2a1f5d;
-    --ink:#f5f3ff; --ink-2:#c7d2fe; --muted:#6c9c93;
-    --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.04);
+    --bg:#0D0B1F; --bg-tint:#1A1640; --surface:#1A1640; --surface-2:#1E1B4B;
+    --ink:#F8F7FF; --ink-2:#A09DC0; --muted:#6B6890;
+    --line:rgba(255,255,255,0.07); --line-2:rgba(255,255,255,0.04);
+    --teal-500:#7C6FE0; --teal-600:#6B5FC0; --teal-300:#A78BFA;
   }
-  body.theme-deep .ambient::before{background: radial-gradient(circle, rgba(139,92,246,.5), transparent 70%); opacity:.4}
-  body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,241,.45), transparent 70%); opacity:.4}
-  body.theme-deep .hero{background: linear-gradient(180deg,#2e1065 0%, #2a2270 100%); border-color: rgba(196,181,253,.18)}
-  body.theme-deep .hero h1{color:#f8f7ff}
-  body.theme-deep .metric{background:#2a1f5d; border-color:rgba(255,255,255,.08)}
-  body.theme-deep .ico-mood{background:rgba(244,114,182,.15); color:#fb7185}
-  body.theme-deep .ico-sleep{background:rgba(99,102,241,.15); color:#a5b4fc}
-  body.theme-deep .ico-streak{background:rgba(251,191,36,.15); color:#fcd34d}
-  body.theme-deep .insight, body.theme-deep .ins-card, body.theme-deep .conn{background:#2a1f5d; border-color:rgba(255,255,255,.08)}
-  body.theme-deep aside.right{background: linear-gradient(180deg, rgba(6,40,34,.85), rgba(6,40,34,.95)); border-left-color: rgba(255,255,255,.06)}
-  body.theme-deep .nav-item:hover{background: rgba(255,255,255,.05)}
-  body.theme-deep .nav-item.active{background: linear-gradient(180deg, rgba(139,92,246,.25), rgba(139,92,246,.08)); color:#c4b5fd; box-shadow: inset 0 0 0 1px rgba(196,181,253,.25)}
+  body.theme-deep .ambient::before{background: radial-gradient(circle, rgba(124,111,224,.55), transparent 70%); opacity:.4}
+  body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,241,.45), transparent 70%); opacity:.38}
+  body.theme-deep .hero{background: linear-gradient(180deg,#1E1B4B 0%, #1A1640 100%); border-color: rgba(124,111,224,.2)}
+  body.theme-deep .hero h1{color:#F8F7FF}
+  body.theme-deep .metric{background:#1A1640; border-color:rgba(255,255,255,.07)}
+  body.theme-deep .ico-mood{background:rgba(251,113,133,.15); color:#FB7185}
+  body.theme-deep .ico-sleep{background:rgba(96,165,250,.15); color:#60A5FA}
+  body.theme-deep .ico-streak{background:rgba(245,158,11,.15); color:#F59E0B}
+  body.theme-deep .insight, body.theme-deep .ins-card, body.theme-deep .conn{background:#1A1640; border-color:rgba(255,255,255,.07)}
+  body.theme-deep aside.right{background: linear-gradient(180deg, rgba(13,11,31,.92), rgba(26,22,64,.95)); border-left-color: rgba(255,255,255,.07)}
+  body.theme-deep .nav-item:hover{background: rgba(255,255,255,.04)}
+  body.theme-deep .nav-item.active{background: linear-gradient(180deg, rgba(124,111,224,.22), rgba(124,111,224,.07)); color:#A78BFA; box-shadow: inset 0 0 0 1px rgba(167,139,250,.2)}
 
   /* palette: cool */
   body.palette-cool{
@@ -2295,8 +2313,8 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     position:relative;
     border-radius: 28px;
     padding: 30px 32px;
-    background: linear-gradient(135deg, #2a1f5d 0%, #312e81 100%);
-    color: #f5f3ff;
+    background: linear-gradient(135deg, #1A1640 0%, #1E1B4B 100%);
+    color: #F8F7FF;
     overflow: hidden;
     margin-bottom: 18px;
     display: grid;
@@ -2315,7 +2333,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   .cm-badge{
     display:inline-flex; align-items:center; gap:7px;
     padding: 5px 10px 5px 9px; border-radius: 999px;
-    background: rgba(255,255,255,.08);
+    background: rgba(255,255,255,0.07);
     backdrop-filter: blur(8px);
     font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
     color: #c4b5fd;
@@ -2354,7 +2372,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   .cta-ghost:hover{background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.3)}
   .cm-agents{
     display:flex; gap:8px; flex-wrap:wrap;
-    padding-top:14px; border-top:1px solid rgba(255,255,255,.08);
+    padding-top:14px; border-top:1px solid rgba(255,255,255,0.07);
     font-size:11.5px; color: rgba(236,253,245,.5);
     align-items:center;
   }
@@ -2362,7 +2380,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   .cm-chip{
     display:inline-flex; align-items:center; gap:7px;
     padding: 5px 11px 5px 9px; border-radius:999px;
-    background: rgba(255,255,255,.06);
+    background: rgba(255,255,255,0.07);
     font-size:12.5px; font-weight:500; color:#f5f3ff;
   }
   .cm-chip::before{content:""; width:7px; height:7px; border-radius:50%; background: var(--c, #c4b5fd)}
@@ -2478,8 +2496,8 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     border-radius:5px; background: rgba(99,102,241,.12); color: #4f46e5;
     letter-spacing:.1em; text-transform:uppercase;
   }
-  body.theme-deep .pring, body.theme-deep .tool{background:#2a1f5d; border-color:rgba(255,255,255,.08)}
-  body.theme-deep .pring .ring::before{background:#2a1f5d}
+  body.theme-deep .pring, body.theme-deep .tool{background:#1A1640; border-color:rgba(255,255,255,.07)}
+  body.theme-deep .pring .ring::before{background:#1A1640}
   body.theme-deep .sect-h h3{color:#f8f7ff}
 
   /* ════════ CURSOR AURORA ════════
@@ -2543,17 +2561,17 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   /* Deep theme: warmer / cooler tones, slightly stronger */
   body.theme-deep .cursor-aurora .ca-halo{
     background: radial-gradient(circle at center,
-      rgba(167,139,250,.55) 0%,
-      rgba(99,102,241,.34) 22%,
-      rgba(56,189,248,.16) 44%,
-      rgba(217,70,239,.10) 60%,
+      rgba(124,111,224,.55) 0%,
+      rgba(99,102,241,.32) 22%,
+      rgba(6,182,212,.14) 44%,
+      rgba(124,111,224,.08) 60%,
       transparent 74%);
   }
   body.theme-deep .cursor-aurora .ca-core{
     background: radial-gradient(circle at center,
-      rgba(255,255,255,.42) 0%,
-      rgba(196,181,253,.40) 20%,
-      rgba(139,92,246,.22) 42%,
+      rgba(255,255,255,.38) 0%,
+      rgba(167,139,250,.36) 20%,
+      rgba(124,111,224,.20) 42%,
       transparent 70%);
   }
   body.theme-deep .cursor-aurora .ca-trail{
@@ -2663,7 +2681,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
       </div>
     </div>
-    <div class="avatar" title="Alejandro">A</div>
+    <div class="avatar" id="side-avatar" title="Perfil">A</div>
   </nav>
 
   <!-- MAIN -->
@@ -2748,16 +2766,16 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     <div id="kl-recs-section"></div>
 
     <!-- Insight card from Kairós -->
-    <section class="insight fade d5" aria-label="Insight de Kairós">
+    <section class="insight fade d5" id="kairos-insight" aria-label="Insight de Kairós">
       <div class="ai">
         <span style="font-family:'Outfit', 'Inter', sans-serif;font-style: normal;font-size:22px;color:#fff;line-height:1">K</span>
       </div>
       <div>
-        <h3>Tus mejores días empiezan con sueño largo.</h3>
-        <p>Cuando duermes <b>+7h</b> tu ánimo del día siguiente sube un <b>40%</b> en promedio. Esta noche apuntemos a dormir antes de las 23:00.</p>
+        <h3 id="insight-h3">Tus mejores días empiezan con sueño largo.</h3>
+        <p id="insight-p">Cuando duermes <b>+7h</b> tu ánimo del día siguiente sube un <b>40%</b> en promedio. Esta noche apuntemos a dormir antes de las 23:00.</p>
         <div style="margin-top:10px">
-          <span class="pill">Playbook · Uso nocturno</span>
-          <span style="font-size:11.5px;color:var(--muted)" class="mono">hace 12 min</span>
+          <span class="pill" id="insight-pill">Playbook · Uso nocturno</span>
+          <span style="font-size:11.5px;color:var(--muted)" class="mono" id="insight-time">hace 12 min</span>
         </div>
       </div>
       <button class="cta" style="background: linear-gradient(135deg,#7c3aed,#4f46e5)">
@@ -2770,7 +2788,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     <div class="sect-h fade d5">
       <h3>Progreso esta semana</h3>
       <span class="ln"></span>
-      <span class="sub">22 — 28 mayo</span>
+      <span class="sub" id="week-range-label"><!-- populated by JS --></span>
     </div>
     <section class="progress-grid">
       <div class="pring fade d3" id="pring-sueno" style="--c:#6366f1;--pct:86">
@@ -2868,9 +2886,9 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
           <div class="hr-feat-bubble" style="--c:#a5f3fc; left:80%; top:10%; width:120px;"></div>
         </div>
         <div class="hr-feat-body">
-          <div class="hr-feat-tag">Kairós te sugiere · hoy</div>
-          <h2>Meditación de 8 min<br/>para cerrar la mañana.</h2>
-          <p>Tu agente de <b>Foco</b> detectó que tuviste 2h de pantalla intensiva. Una pausa guiada baja tu carga cognitiva y mejora tu siguiente sesión.</p>
+          <div class="hr-feat-tag" id="feat-tag">Kairós te sugiere · hoy</div>
+          <h2 id="feat-h2">Meditación de 8 min<br/>para cerrar la mañana.</h2>
+          <p id="feat-p">Tu agente de <b>Foco</b> detectó que tuviste 2h de pantalla intensiva. Una pausa guiada baja tu carga cognitiva y mejora tu siguiente sesión.</p>
           <div class="hr-feat-actions">
             <button class="hr-feat-cta">▶ Empezar sesión</button>
             <button class="hr-feat-ghost">Otra sugerencia</button>
@@ -3159,7 +3177,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
           </div>
         </div>
 
-        <div class="hb-row" data-done="1">
+        <div class="hb-row" data-done="1" data-habito="meditacion">
           <button class="hb-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg></button>
           <div class="hb-icon" style="background:#ede9fe;color:#15803d">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M6 3v18"/><path d="M18 3v18"/><circle cx="12" cy="12" r="4"/></svg>
@@ -3201,7 +3219,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
           </div>
         </div>
 
-        <div class="hb-row">
+        <div class="hb-row" data-habito="movimiento">
           <button class="hb-check"></button>
           <div class="hb-icon" style="background:#ede9fe;color:#6d28d9">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -3349,10 +3367,10 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
         <div class="set-group-t">Cuenta</div>
         <div class="set-row">
           <div class="set-l">
-            <div class="set-avatar">A</div>
+            <div class="set-avatar" id="set-avatar-letter">A</div>
             <div>
-              <div class="set-n">Alejandro Pérez</div>
-              <div class="set-d">alejandro@kairos.app · plan Personal</div>
+              <div class="set-n" id="set-profile-name">Alejandro Pérez</div>
+              <div class="set-d" id="set-profile-email">alejandro@kairos.app · plan Personal</div>
             </div>
           </div>
           <button class="set-btn">Editar perfil →</button>
@@ -3408,6 +3426,18 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
           <button class="set-btn danger">Eliminar →</button>
         </div>
       </div>
+
+      <div class="set-group">
+        <div class="set-group-t">Demo y desarrollo</div>
+        <div class="set-row">
+          <div class="set-l"><div class="set-n">Cargar datos de muestra</div><div class="set-d">Rellena todas las herramientas con datos realistas para explorar Kairós</div></div>
+          <button class="set-btn" id="btn-seed-demo">Cargar demo →</button>
+        </div>
+        <div class="set-row">
+          <div class="set-l"><div class="set-n">Limpiar datos demo</div><div class="set-d">Elimina los datos de muestra del perfil actual</div></div>
+          <button class="set-btn danger" id="btn-reset-demo">Limpiar →</button>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -3427,7 +3457,7 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     </div>
 
     <div class="panel-section fade d2">
-      <div class="panel-title">Tus agentes <a href="#agents">ver todos →</a></div>
+      <div class="panel-title">Tus agentes <a href="#agentes">ver todos →</a></div>
       <div class="agent live" style="--agent-c:#6366f1">
         <span class="pulse"></span>
         <span class="name">Kairós Core</span>
@@ -3491,19 +3521,26 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
           </div>
           <div class="st">Conectado</div>
         </div>
-        <div class="conn">
+        <div class="conn connected">
           <div class="head">
             <div class="lg" style="background:#0a0a0a">N</div>
             <div class="nm">Notion</div>
           </div>
-          <div class="add">+ conectar</div>
+          <div class="st">Conectado</div>
         </div>
-        <div class="conn">
+        <div class="conn connected">
           <div class="head">
-            <div class="lg" style="background:#f59e0b">F</div>
-            <div class="nm">Google Fit</div>
+            <div class="lg" style="background:#f97316">S</div>
+            <div class="nm">Salud</div>
           </div>
-          <div class="add">+ conectar</div>
+          <div class="st">Conectado</div>
+        </div>
+        <div class="conn connected">
+          <div class="head">
+            <div class="lg" style="background:#fc4c02">St</div>
+            <div class="nm">Strava</div>
+          </div>
+          <div class="st">Conectado</div>
         </div>
       </div>
     </div>
@@ -3537,6 +3574,204 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   };
   const state = Object.assign({}, defaults, JSON.parse(sessionStorage.getItem(STATE_KEY) || 'null') || {});
   const save = () => sessionStorage.setItem(STATE_KEY, JSON.stringify(state));
+
+  /* ───── LIVE TOOL CACHE ─────
+     Populated by async fetches on load and on 'kairos:tool-saved'.
+     Closures in knownAlways() read from this synchronously at call-time.
+  */
+  const _toolCache = { health: null, notion: null, strava: null, meditation: null, diary: null, calendar: null, spotify: null };
+
+  function _getProfileId() {
+    try {
+      const p = JSON.parse(sessionStorage.getItem('kairos_profile') || 'null');
+      if (p && p.id) return p.id;
+    } catch {}
+    return localStorage.getItem('kairos_profile_id') || 'demo';
+  }
+
+  async function _refreshToolCache() {
+    const pid = _getProfileId();
+    const BASE = window.KAIROS_API_URL || 'http://localhost:8010';
+    const enc = encodeURIComponent(pid);
+    try {
+      const [hRes, nRes, sRes, mRes, dRes, cRes, spRes] = await Promise.allSettled([
+        fetch(`${BASE}/health-data/get?profile_id=${enc}`).then(r => r.json()),
+        fetch(`${BASE}/notion/tasks?profile_id=${enc}`).then(r => r.json()),
+        fetch(`${BASE}/strava/activity?profile_id=${enc}`).then(r => r.json()),
+        fetch(`${BASE}/meditation/stats?profile_id=${enc}`).then(r => r.json()),
+        fetch(`${BASE}/diary/entries?profile_id=${enc}&limit=5`).then(r => r.json()),
+        fetch(`${BASE}/calendar/today?profile_id=${enc}`).then(r => r.json()),
+        fetch(`${BASE}/spotify/track?profile_id=${enc}`).then(r => r.json()),
+      ]);
+      if (hRes.status === 'fulfilled')  _toolCache.health     = hRes.value.record    || null;
+      if (nRes.status === 'fulfilled')  _toolCache.notion     = nRes.value            || null;
+      if (sRes.status === 'fulfilled')  _toolCache.strava     = sRes.value.activity   || null;
+      if (mRes.status === 'fulfilled')  _toolCache.meditation = mRes.value            || null;
+      if (dRes.status === 'fulfilled')  _toolCache.diary      = dRes.value.entries    || null;
+      if (cRes.status === 'fulfilled')  _toolCache.calendar   = cRes.value.events     || null;
+      if (spRes.status === 'fulfilled') _toolCache.spotify    = spRes.value.track || null;
+      // Re-render agents board if already mounted so knownAlways reflects fresh data
+      const mount = document.getElementById('agents-board-mount');
+      if (mount && mount.children.length) renderAgentsBoard();
+      _updateHabitosStats();
+      _updateHerramientasMeta();
+
+      // Auto-seed demo on first load if all tools are empty
+      const isEmpty = !_toolCache.health && !_toolCache.meditation && !_toolCache.diary
+                   && !_toolCache.strava && !_toolCache.notion;
+      const seedKey = 'kairos_demo_seeded_' + pid;
+      if (isEmpty && !sessionStorage.getItem(seedKey)) {
+        sessionStorage.setItem(seedKey, '1');
+        fetch(`${BASE}/api/v1/demo/seed?profile_id=${enc}`, { method: 'POST' })
+          .then(() => _refreshToolCache())
+          .catch(() => {});
+      }
+    } catch {}
+  }
+
+  function _updateHabitosStats() {
+    const m = _toolCache.meditation;
+    const h = _toolCache.health;
+    const s = _toolCache.strava;
+    const d = _toolCache.diary;
+
+    // Fix today dot FIRST so subsequent todayDot queries find the right element
+    // L=0,M=1,X=2,J=3,V=4,S=5,D=6 — JS getDay() 0=Sun,1=Mon,...,6=Sat
+    const jsDay = new Date().getDay();
+    const todayIdx = jsDay === 0 ? 6 : jsDay - 1;
+    document.querySelectorAll('[data-view="habitos"] .hb-week').forEach(week => {
+      week.querySelectorAll('.d').forEach((dot, i) => dot.classList.toggle('today', i === todayIdx));
+    });
+
+    // Auto-mark tool-backed habit rows
+    const medRow = document.querySelector('[data-habito="meditacion"]');
+    if (medRow) {
+      const hasSession = m && m.today_sessions > 0;
+      medRow.dataset.done = hasSession ? '1' : '0';
+      const medSub = medRow.querySelector('.hb-sub');
+      if (medSub && m) {
+        const total = m.total_sessions || 0;
+        const todayMin = m.today_minutes || 0;
+        medSub.textContent = total > 0
+          ? `Hoy · ${todayMin} min · ${total} sesiones total`
+          : 'Hoy · sin registrar';
+      }
+      const todayDot = medRow.querySelector('.hb-week .d.today');
+      if (todayDot) todayDot.classList.toggle('done', !!(m && m.today_sessions > 0));
+    }
+    const movRow = document.querySelector('[data-habito="movimiento"]');
+    if (movRow) {
+      const hasSteps = (h && h.steps >= 500) || (s && s.duration_min > 0);
+      movRow.dataset.done = hasSteps ? '1' : '0';
+      const movSub = movRow.querySelector('.hb-sub');
+      if (movSub) {
+        if (s && s.duration_min > 0) movSub.textContent = `Hoy · ${s.sport || 'actividad'} ${s.duration_min} min`;
+        else if (h && h.steps) movSub.textContent = `Hoy · ${h.steps.toLocaleString()} pasos`;
+        else movSub.textContent = 'Hoy · pendiente · sugerido por Energía';
+      }
+      const todayDot = movRow.querySelector('.hb-week .d.today');
+      if (todayDot) todayDot.classList.toggle('done', hasSteps);
+    }
+
+    // Count all done rows
+    const allRows = document.querySelectorAll('[data-view="habitos"] .hb-list .hb-row');
+    const doneCount = [...allRows].filter(r => r.dataset.done === '1').length;
+    const statsEls = document.querySelectorAll('[data-view="habitos"] .hb-stat-v');
+    if (statsEls[1]) statsEls[1].innerHTML = `${doneCount}<span>/ ${allRows.length}</span>`;
+
+    // Cumplimiento semanal: ratio of done habits today as weekly proxy
+    const pct = allRows.length > 0 ? Math.round(doneCount / allRows.length * 100) : 0;
+    if (statsEls[2]) statsEls[2].innerHTML = `${pct}<span>%</span>`;
+
+    // Récord histórico: total accumulated sessions as engagement proxy
+    const sessionCount = (m ? m.total_sessions || 0 : 0) + (d ? d.length : 0);
+    if (statsEls[0] && sessionCount > 0) statsEls[0].innerHTML = `${sessionCount}<span>sesiones</span>`;
+    if (statsEls[3] && sessionCount > 0) statsEls[3].innerHTML = `${sessionCount}<span>registros</span>`;
+  }
+
+  function _updateHerramientasMeta() {
+    const h = _toolCache.health;
+    const n = _toolCache.notion;
+    const s = _toolCache.strava;
+    const m = _toolCache.meditation;
+    const d = _toolCache.diary;
+    const c = _toolCache.calendar;
+    const sp = _toolCache.spotify;
+
+    function setMeta(tool, text) {
+      const el = document.querySelector(`[data-tool="${tool}"] .hr-card-meta span:first-child`);
+      if (el) el.textContent = text;
+    }
+
+    if (sp && sp.track) setMeta('spotify', `Escuchando · ${sp.track}`);
+    else setMeta('spotify', 'Sin pista activa');
+
+    if (c && c.length) setMeta('calendar', `${c.length} evento${c.length !== 1 ? 's' : ''} hoy`);
+    else setMeta('calendar', 'Sin eventos hoy');
+
+    if (d && d.length) setMeta('diario', `${d.length} entrada${d.length !== 1 ? 's' : ''} recientes`);
+    else setMeta('diario', 'Sin entradas aún');
+
+    if (h && (h.steps || h.sleep_hours)) {
+      const parts = [];
+      if (h.steps) parts.push(`${h.steps.toLocaleString()} pasos`);
+      if (h.sleep_hours) parts.push(`${h.sleep_hours}h sueño`);
+      setMeta('health', parts.join(' · '));
+    } else setMeta('health', 'Sin datos aún');
+
+    if (n && n.tasks && n.tasks.length) {
+      const pending = n.tasks.filter(t => !t.done).length;
+      setMeta('notion', `${n.tasks.length} tareas · ${pending} pendientes`);
+    } else setMeta('notion', 'Sin tareas aún');
+
+    if (m && m.total_sessions > 0) setMeta('calm', `${m.total_sessions} sesiones · ${m.today_minutes || 0} min hoy`);
+    else setMeta('calm', 'Sin sesiones aún');
+
+    if (s && s.sport) setMeta('strava', `${s.sport} · ${s.duration_min} min${s.distance_km ? ' · ' + s.distance_km + 'km' : ''}`);
+    else setMeta('strava', 'Sin actividad aún');
+
+    // Update featured recommendation card from synthesis data
+    const sol = typeof state !== 'undefined' && state.solution;
+    const diag = typeof state !== 'undefined' && state.diagnosis;
+    const featTag = document.getElementById('feat-tag');
+    const featH2  = document.getElementById('feat-h2');
+    const featP   = document.getElementById('feat-p');
+    if (sol && sol.steps && sol.steps.length && featP) {
+      if (featTag) featTag.textContent = 'Kairós te sugiere · basado en hoy';
+      if (featH2) featH2.innerHTML = sol.steps[0];
+      if (sol.steps.length > 1) featP.textContent = sol.steps[1];
+    } else if (diag && (diag.matched_patterns || diag.patterns || []).length && featP) {
+      const pat = (diag.matched_patterns || diag.patterns)[0];
+      const PAT_TIPS = {
+        fatiga_digital: 'Tu agente de Pantalla detectó carga cognitiva alta. Una pausa guiada baja el nivel de cortisol y mejora tu próxima sesión.',
+        distres_moderado: 'Tu agente de Ánimo detectó estrés moderado. Una meditación breve activa el sistema nervioso parasimpático.',
+        privacion_sueno: 'Tu agente de Sueño detectó déficit nocturno. Un descanso de 10 minutos ahora puede compensar parte del déficit.',
+        uso_digital_elevado: 'Tu agente de Pantalla detectó uso elevado. Una pausa sin pantalla mejora tu foco para el resto del día.',
+      };
+      if (PAT_TIPS[pat]) featP.textContent = PAT_TIPS[pat];
+    }
+  }
+
+  function _updateSettingsProfile() {
+    try {
+      const p = JSON.parse(sessionStorage.getItem('kairos_profile') || 'null');
+      if (!p) return;
+      const name = p.name || p.display_name || p.id || 'Usuario';
+      const email = p.email || '';
+      const initial = name[0].toUpperCase();
+      const avatarEl = document.getElementById('set-avatar-letter');
+      const nameEl = document.getElementById('set-profile-name');
+      const emailEl = document.getElementById('set-profile-email');
+      const sideAv = document.getElementById('side-avatar');
+      if (avatarEl) avatarEl.textContent = initial;
+      if (nameEl) nameEl.textContent = name;
+      if (emailEl) emailEl.textContent = email ? `${email} · plan Personal` : 'plan Personal';
+      if (sideAv) { sideAv.textContent = initial; sideAv.title = name; }
+    } catch {}
+  }
+
+  _refreshToolCache();
+  window.addEventListener('kairos:tool-saved', _refreshToolCache);
 
   /* ───── AGENT MODEL ─────
      Each agent declares:
@@ -3572,7 +3807,17 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       color: '#fb7185',
       role: 'Recopilación diaria',
       desc: 'Rastreo cómo te sientes y los eventos que te marcan. Solo te pido una palabra o un emoji.',
-      knownAlways: () => ['Ánimo de ayer · 4/5', 'Tendencia semanal · subiendo', 'Mejor día · viernes'],
+      knownAlways: () => {
+        const d = _toolCache.diary;
+        if (d && d.length) {
+          const last = d[0];
+          const moodLabel = { bien:'Bien', neutral:'Neutral', dificil:'Difícil' }[last.mood] || last.mood || '—';
+          const facts = [`Última entrada · ${moodLabel}`];
+          if (d.length > 1) facts.push(`Entradas recientes · ${d.length}`);
+          return facts;
+        }
+        return ['Ánimo de ayer · 4/5', 'Tendencia semanal · subiendo'];
+      },
       questions: [
         {
           key: 'animo:now',
@@ -3602,7 +3847,15 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       color: '#60a5fa',
       role: 'Recopilación diaria',
       desc: 'Sé cuándo te dormiste y cuánto descansaste. Cruzo eso con pantalla y cafeína.',
-      knownAlways: () => ['Horas anoche · 7.4h', 'Despertar · 7:12'],
+      knownAlways: () => {
+        const h = _toolCache.health;
+        if (h && h.sleep_hours) {
+          const facts = [`Horas anoche · ${h.sleep_hours}h`];
+          if (h.heart_rate) facts.push(`FC reposo · ${h.heart_rate} bpm`);
+          return facts;
+        }
+        return ['Horas anoche · 7.4h', 'Despertar · 7:12'];
+      },
       questions: [
         {
           key: 'sueno:quality',
@@ -3625,7 +3878,20 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       color: '#a78bfa',
       role: 'Recopilación diaria',
       desc: 'Pregunto qué quieres priorizar. Después protejo tu calendario y silencio lo que sobra.',
-      knownAlways: () => ['Sesiones esta semana · 3', 'Récord · 95 min ininterrumpidos'],
+      knownAlways: () => {
+        const n = _toolCache.notion;
+        const c = _toolCache.calendar;
+        const facts = [];
+        if (n && n.tasks && n.tasks.length) {
+          const pending = n.tasks.filter(t => !t.done).length;
+          const done = n.tasks.filter(t => t.done).length;
+          facts.push(`Tareas pendientes · ${pending}`, `Completadas · ${done}`);
+        }
+        if (c && c.length) {
+          facts.push(`Eventos hoy · ${c.length}`);
+        }
+        return facts.length ? facts : ['Sesiones esta semana · 3', 'Récord · 95 min ininterrumpidos'];
+      },
       questions: [
         {
           key: 'foco:priority',
@@ -3648,7 +3914,14 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       color: '#84cc16',
       role: 'Recopilación diaria',
       desc: 'Comida, hidratación, movimiento. Pregunto poco — solo cuando veo señales raras.',
-      knownAlways: () => ['Pasos hoy · 4.2k', 'Hidratación · 1.2L'],
+      knownAlways: () => {
+        const h = _toolCache.health;
+        const s = _toolCache.strava;
+        const facts = [];
+        if (h && h.steps)   facts.push(`Pasos hoy · ${h.steps.toLocaleString()}`);
+        if (s && s.sport)   facts.push(`Actividad · ${s.sport} ${s.duration_min} min`);
+        return facts.length ? facts : ['Pasos hoy · 4.2k', 'Hidratación · 1.2L'];
+      },
       questions: [
         {
           key: 'energia:breakfast',
@@ -3669,7 +3942,14 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       role: 'Pasivo · sensor',
       desc: 'Cuento minutos por categoría de app. No leo contenido — solo categorías.',
       passive: true,
-      knownAlways: () => ['Tiempo hoy · 1h 42m', 'App top · YouTube 45m', 'Pico · 18–19h'],
+      knownAlways: () => {
+        const sp = _toolCache.spotify;
+        const facts = ['Tiempo hoy · 1h 42m', 'Pico · 18–19h'];
+        if (sp && sp.track) {
+          facts.splice(1, 0, `Spotify · ${sp.track}${sp.genre ? ' (' + sp.genre + ')' : ''}`);
+        }
+        return facts;
+      },
       questions: [],
     },
 
@@ -3679,7 +3959,14 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       role: 'Pasivo · cálculo',
       desc: 'Calculo cuántos días seguidos cumples tus mínimos. Te aviso cuando estás a punto de romperla.',
       passive: true,
-      knownAlways: () => ['Racha actual · 12 días', 'Récord · 14 días'],
+      knownAlways: () => {
+        const m = _toolCache.meditation;
+        const d = _toolCache.diary;
+        const streak = (m && m.total_sessions ? m.total_sessions : 0) + (d && d.length ? d.length : 0);
+        return streak > 0
+          ? [`Actividad acumulada · ${streak} registros`, 'Sigue así para mantener la racha']
+          : ['Racha actual · 0', 'Agrega entradas para iniciarla'];
+      },
       questions: [],
     },
   };
@@ -3812,6 +4099,11 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
   function closeOverlays(){
     document.querySelectorAll('.k-overlay.open').forEach(el => el.classList.remove('open'));
     scrim.classList.remove('open');
+    // Restore hash to current active view so #chat doesn't linger
+    const currentView = document.body.dataset.view || 'dashboard';
+    if (location.hash.replace('#','') === 'chat'){
+      history.replaceState(null, '', '#' + currentView);
+    }
   }
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlays(); });
 
@@ -3962,23 +4254,16 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     const tp = typing(a.color);
     setTimeout(()=>{
       tp.remove();
-      const greet = {
-        animo:   'Hola, soy Ánimo. Te haré un par de preguntas.',
-        sueno:   'Hola, soy Sueño. Una pregunta muy breve.',
-        foco:    'Hola, soy Foco. Cuéntame qué te importa hoy.',
-        energia: 'Hola, soy Energía. Última pregunta.',
-      }[id];
-      bubble('bot', greet, { agent: a.title, color: a.color });
-      setTimeout(askCurrent, 500);
+      bubble('bot', `Hola, soy ${a.title}.`, { agent: a.title, color: a.color });
+      setTimeout(askCurrent, 400);
     }, 500);
   }
 
-  function askCurrent(){
+  async function askCurrent(){
     const id = FLOW_AGENTS[flowState.agentIdx];
     const a = AGENTS[id];
     const q = a.questions[flowState.questionIdx];
     if (!q){
-      // agent done, go next
       flowState.agentIdx++;
       flowState.questionIdx = 0;
       if (flowState.agentIdx < FLOW_AGENTS.length) introAgent();
@@ -3986,11 +4271,21 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       return;
     }
     const tp = typing(a.color);
-    setTimeout(()=>{
-      tp.remove();
-      bubble('bot', q.ask, { agent: a.title, color: a.color });
-      renderChips(q, a);
-    }, 450);
+    let questionText = q.ask; // fallback hardcodeado
+    try {
+      const res = await fetch(KAIROS_API + '/agents/' + id + '/question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context: buildCheckInTranscript() || '' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.question) questionText = data.question;
+      }
+    } catch (_) { /* usa fallback */ }
+    tp.remove();
+    bubble('bot', questionText, { agent: a.title, color: a.color });
+    renderChips(q, a);
   }
 
   function nextStep(){
@@ -4029,12 +4324,15 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       state.coreSynthesis = null;
       save();
       apiSynthesize(transcript).then(res => {
-        state.coreSynthesis    = res.summary;
-        state.agentReadings    = res.specialists;
-        state.compositeScore   = res.composite_score;
-        state.mlPrediction     = res.ml_prediction;
-        state.diagnosis        = res.diagnosis;
-        state.solution         = res.solution;
+        state.coreSynthesis       = res.summary;
+        state.agentReadings       = res.specialists;
+        state.compositeScore      = res.composite_score;
+        state.mlPrediction        = res.ml_prediction;
+        state.diagnosis           = res.diagnosis;
+        state.solution            = res.solution;
+        state.referral            = res.referral;
+        state.professionalSummary = res.professional_summary;
+        state.trend               = res.trend;
         save();
         refreshAnalytics();
         reflectCheckinDone();
@@ -4092,12 +4390,15 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       const tp = typing();
       apiSynthesize(state.lastTranscript).then(res => {
         tp.remove();
-        state.coreSynthesis  = res.summary;
-        state.agentReadings  = res.specialists;
-        state.compositeScore = res.composite_score;
-        state.mlPrediction   = res.ml_prediction;
-        state.diagnosis      = res.diagnosis;
-        state.solution       = res.solution;
+        state.coreSynthesis       = res.summary;
+        state.agentReadings       = res.specialists;
+        state.compositeScore      = res.composite_score;
+        state.mlPrediction        = res.ml_prediction;
+        state.diagnosis           = res.diagnosis;
+        state.solution            = res.solution;
+        state.referral            = res.referral;
+        state.professionalSummary = res.professional_summary;
+        state.trend               = res.trend;
         save();
         refreshAnalytics();
         reflectCheckinDone();
@@ -4499,6 +4800,44 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       card.querySelector('.desc').textContent = parts.slice(1).join('. ') || r.insight;
       card.querySelector('.meta').textContent = `hoy · agente ${r.name.toLowerCase()}`;
     });
+
+    // Dashboard insight card — update with real synthesis data
+    const sol = state.solution;
+    const diag = state.diagnosis;
+    const h3 = document.getElementById('insight-h3');
+    const p   = document.getElementById('insight-p');
+    const pill = document.getElementById('insight-pill');
+    const insTime = document.getElementById('insight-time');
+    if (h3 && sol && sol.steps && sol.steps.length) {
+      h3.textContent = sol.steps[0];
+      if (p && sol.steps.length > 1) p.textContent = sol.steps[1];
+      else if (p && state.coreSynthesis) {
+        const summaryParts = state.coreSynthesis.split(/\.\s+/);
+        p.textContent = (summaryParts[1] || summaryParts[0] || '').slice(0, 200);
+      }
+      const diagPatterns = diag && (diag.matched_patterns || diag.patterns || []);
+      if (pill && diagPatterns && diagPatterns.length) {
+        const PAT_LABELS = { distres_severo:'Estrés elevado', distres_moderado:'Estrés moderado', distres_leve:'Estrés leve', fatiga_digital:'Fatiga digital', uso_digital_elevado:'Alto uso digital', privacion_sueno:'Privación de sueño', sueno_deficiente:'Sueño bajo', baja_energia:'Energía baja', deficit_foco:'Déficit de foco', dependencia_redes:'Exceso de redes', bienestar_en_rango:'Bienestar en rango' };
+        pill.textContent = 'Kairós · ' + (PAT_LABELS[diagPatterns[0]] || diagPatterns[0]);
+      }
+      if (insTime) insTime.textContent = 'hace unos minutos';
+    }
+    // Update herramientas featured card from fresh synthesis data
+    _updateHerramientasMeta();
+  }
+
+  /* ═══════════ WEEK RANGE LABEL ═══════════ */
+  function updateWeekRange() {
+    const el = document.getElementById('week-range-label');
+    if (!el) return;
+    const MONTHS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const now = new Date();
+    const dow = now.getDay(); // 0=Sun
+    const daysToMon = dow === 0 ? 6 : dow - 1;
+    const mon = new Date(now.getTime() - daysToMon * 86400000);
+    const sun = new Date(mon.getTime() + 6 * 86400000);
+    const fmt = d => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+    el.textContent = `${fmt(mon)} — ${fmt(sun)}`;
   }
 
   /* ═══════════ REFLECT CHECK-IN DONE IN HERO ═══════════ */
@@ -4567,6 +4906,180 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     });
     // Apply real scores on top
     applyLiveScores();
+
+    // Referral card — render/update when referral data is available
+    _renderReferralCard();
+
+    // Trend sparkline — appears below diagnosis card when 2+ sessions exist
+    _renderTrendCard();
+  }
+
+  function _renderTrendCard() {
+    const trend = state.trend;
+    const existing = document.getElementById('kairos-trend-card');
+    if (existing) existing.remove();
+    if (!trend || !trend.severity_series || trend.severity_series.length < 2) return;
+
+    const series = trend.severity_series;
+    const dir = trend.direction;
+    const DIRECTION_COLOR = { improving: '#22c55e', worsening: '#ef4444', stable: '#8b5cf6' };
+    const DIRECTION_LABEL = { improving: 'Mejorando', worsening: 'Tendencia alta', stable: 'Estable' };
+    const color = DIRECTION_COLOR[dir] || '#8b5cf6';
+    const label = DIRECTION_LABEL[dir] || dir;
+
+    const maxVal = 4;
+    const W = 120, H = 36, pad = 4;
+    const pts = series.map((v, i) => {
+      const x = pad + (i / Math.max(series.length - 1, 1)) * (W - 2 * pad);
+      const y = H - pad - (v / maxVal) * (H - 2 * pad);
+      return `${x},${y}`;
+    }).join(' ');
+
+    const escalateNote = trend.escalate_referral
+      ? `<p style="margin:4px 0 0;font-size:11px;color:#ef4444;font-weight:600;">Patrón severo repetido — derivación recomendada</p>`
+      : '';
+
+    const card = document.createElement('div');
+    card.id = 'kairos-trend-card';
+    card.style.cssText = `
+      margin:16px 0 0; padding:14px 16px; border-radius:14px;
+      background:rgba(255,255,255,.72); border:1px solid rgba(139,92,246,.18);
+      box-shadow:0 2px 12px -4px rgba(139,92,246,.15);
+      font-family:'Inter',-apple-system,sans-serif;
+    `;
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:600;color:#0D0B1F">Tendencia diagnóstica</span>
+        <span style="font-size:11px;font-weight:600;color:${color};background:${color}18;padding:2px 8px;border-radius:20px">${label}</span>
+        <span style="font-size:11px;color:#9ca3af;margin-left:auto">${series.length} sesiones</span>
+      </div>
+      <svg width="${W}" height="${H}" style="display:block;overflow:visible">
+        <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+        ${series.map((v, i) => {
+          const x = pad + (i / Math.max(series.length - 1, 1)) * (W - 2 * pad);
+          const y = H - pad - (v / maxVal) * (H - 2 * pad);
+          return `<circle cx="${x}" cy="${y}" r="3.5" fill="${color}" opacity=".85"/>`;
+        }).join('')}
+      </svg>
+      ${escalateNote}
+    `;
+
+    const ci = document.querySelector('.checkin');
+    const refCard = document.getElementById('kairos-referral-card');
+    const anchor = refCard || ci;
+    if (anchor) anchor.insertAdjacentElement('afterend', card);
+  }
+
+  function _renderReferralCard() {
+    const ref = state.referral;
+    const summary = state.professionalSummary;
+    if (!ref) return;
+
+    const existing = document.getElementById('kairos-referral-card');
+    if (existing) existing.remove();
+
+    if (!ref.refer) return;
+
+    const URGENCY_COLOR = {
+      'prioritario (esta semana)': '#ef4444',
+      'próximas dos semanas':      '#f97316',
+      'esta semana':               '#f59e0b',
+    };
+    const color = URGENCY_COLOR[ref.urgency] || '#8b5cf6';
+    const criteria = (ref.referral_criteria || []).map(c => `<li>${c}</li>`).join('');
+
+    const card = document.createElement('div');
+    card.id = 'kairos-referral-card';
+    card.style.cssText = `
+      margin: 16px 0; padding: 16px 18px;
+      background: linear-gradient(135deg, rgba(239,68,68,.06), rgba(139,92,246,.06));
+      border: 1px solid ${color}44; border-radius: 12px;
+      font-family: 'Inter', sans-serif; font-size: 13.5px; color: #0D0B1F;
+    `;
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
+        <strong style="font-size:13px;letter-spacing:-.01em">Derivación recomendada</strong>
+        <span style="margin-left:auto;font-size:11px;color:${color};font-weight:600;text-transform:uppercase;letter-spacing:.04em">${ref.urgency}</span>
+      </div>
+      <p style="margin:0 0 8px;font-weight:600">${ref.specialist_type || 'Especialista'}</p>
+      ${criteria ? `<ul style="margin:0 0 12px;padding-left:16px;color:#475569;font-size:12.5px">${criteria}</ul>` : ''}
+      ${summary ? `
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="k-ref-copy" style="
+            padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:12.5px;font-weight:600;
+            background:${color};color:#fff;font-family:inherit
+          ">Copiar mensaje para el especialista</button>
+          <button id="k-ref-view" style="
+            padding:7px 14px;border-radius:8px;border:1px solid ${color}66;cursor:pointer;font-size:12.5px;font-weight:500;
+            background:transparent;color:${color};font-family:inherit
+          ">Ver mensaje</button>
+        </div>
+      ` : ''}
+    `;
+
+    // Insert after .checkin section
+    const checkin = document.querySelector('.checkin');
+    if (checkin && checkin.parentNode) {
+      checkin.parentNode.insertBefore(card, checkin.nextSibling);
+    } else {
+      document.querySelector('main')?.prepend(card);
+    }
+
+    if (summary) {
+      card.querySelector('#k-ref-copy')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(summary).then(() => toast('Mensaje copiado al portapapeles', 'ok'));
+      });
+      card.querySelector('#k-ref-view')?.addEventListener('click', () => {
+        _showSummaryModal(summary, ref.specialist_type, color);
+      });
+    }
+  }
+
+  function _showSummaryModal(text, specialist, color) {
+    document.getElementById('k-summary-modal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'k-summary-modal';
+    modal.style.cssText = `
+      position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+      background:rgba(4,30,28,.5);backdrop-filter:blur(4px);padding:20px;
+    `;
+    modal.innerHTML = `
+      <div style="
+        background:#fff;border-radius:16px;max-width:560px;width:100%;
+        padding:24px;box-shadow:0 24px 60px -12px rgba(0,0,0,.3);
+        font-family:'Inter',sans-serif;color:#0D0B1F;max-height:80vh;overflow-y:auto;
+      ">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <strong style="font-size:15px">Mensaje para ${specialist || 'especialista'}</strong>
+          <button id="k-modal-close" style="border:none;background:none;cursor:pointer;font-size:20px;color:#64748b">&times;</button>
+        </div>
+        <pre style="
+          white-space:pre-wrap;font-family:'Inter',sans-serif;font-size:13px;
+          line-height:1.65;color:#1e293b;background:#f8fafc;
+          padding:14px;border-radius:8px;border:1px solid #e2e8f0;
+        ">${text.replace(/</g,'&lt;')}</pre>
+        <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+          <button id="k-modal-copy" style="
+            padding:8px 18px;border-radius:8px;border:none;cursor:pointer;
+            background:${color};color:#fff;font-weight:600;font-family:inherit;font-size:13px
+          ">Copiar</button>
+          <button id="k-modal-close2" style="
+            padding:8px 18px;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer;
+            background:transparent;color:#64748b;font-family:inherit;font-size:13px
+          ">Cerrar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    const close = () => modal.remove();
+    modal.querySelector('#k-modal-close').onclick  = close;
+    modal.querySelector('#k-modal-close2').onclick = close;
+    modal.querySelector('#k-modal-copy').onclick   = () => {
+      navigator.clipboard.writeText(text).then(() => toast('Copiado', 'ok'));
+    };
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
   }
 
   /* ═══════════ WIRING ═══════════ */
@@ -4737,8 +5250,11 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       logo.addEventListener('click', () => openChat('kairos'));
     }
     // Initial paint
+    updateWeekRange();
     renderAgentsBoard();
     reflectCheckinDone();
+    applyLiveScores();
+    _updateSettingsProfile();
     // Initial view from hash
     const initialHash = location.hash.replace('#','').split('?')[0];
     showView(initialHash || 'dashboard');
@@ -4807,18 +5323,22 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       });
     });
 
-    // Hábitos checks
-    document.querySelectorAll('.hb-check').forEach(c => {
-      c.addEventListener('click', () => {
-        const row = c.closest('.hb-row');
-        const done = row.dataset.done === '1';
-        row.dataset.done = done ? '0' : '1';
-        const today = row.querySelector('.hb-week .d.today');
-        if (today){
-          today.classList.toggle('done');
-        }
-        toast(done ? 'Hábito desmarcado' : '¡Bien! Hábito completado', 'ok');
-      });
+    // Hábitos checks — event delegation so dynamically added habits also work
+    document.querySelector('[data-view="habitos"] .hb-list')?.addEventListener('click', e => {
+      const c = e.target.closest('.hb-check');
+      if (!c) return;
+      const row = c.closest('.hb-row');
+      const done = row.dataset.done === '1';
+      row.dataset.done = done ? '0' : '1';
+      const today = row.querySelector('.hb-week .d.today');
+      if (today) today.classList.toggle('done');
+      const doneCount = document.querySelectorAll('[data-view="habitos"] .hb-list .hb-row[data-done="1"]').length;
+      const total = document.querySelectorAll('[data-view="habitos"] .hb-list .hb-row').length;
+      const statsEls = document.querySelectorAll('[data-view="habitos"] .hb-stat-v');
+      if (statsEls[1]) statsEls[1].innerHTML = `${doneCount}<span>/ ${total}</span>`;
+      const pct = total > 0 ? Math.round(doneCount / total * 100) : 0;
+      if (statsEls[2]) statsEls[2].innerHTML = `${pct}<span>%</span>`;
+      toast(done ? 'Hábito desmarcado' : '¡Bien! Hábito completado hoy', 'ok');
     });
 
     // Hábitos add
@@ -4839,9 +5359,38 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     document.querySelectorAll('.set-btn').forEach(b => b.addEventListener('click', e => {
       e.stopPropagation();
       const tx = b.textContent.trim();
-      if (tx.toLowerCase().includes('eliminar')) toast('No vamos a hacer eso 🙂 — modo demo', 'warn');
+      if (tx.toLowerCase().includes('eliminar')) toast('No vamos a hacer eso — modo demo activo', 'warn');
       else toast(tx + '…', 'ok');
     }));
+
+    // Demo seed / reset buttons
+    document.getElementById('btn-seed-demo')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-seed-demo');
+      btn.disabled = true; btn.textContent = 'Cargando…';
+      try {
+        const pid = _getProfileId();
+        const res = await fetch(`${KAIROS_API}/api/v1/demo/seed?profile_id=${encodeURIComponent(pid)}`, { method: 'POST' });
+        if (!res.ok) throw new Error();
+        await _refreshToolCache();
+        toast('Datos de muestra cargados en todas las herramientas', 'ok');
+        btn.textContent = 'Cargar demo →';
+      } catch {
+        toast('No se pudo conectar al API — verifica que el servidor esté activo', 'warn');
+        btn.textContent = 'Cargar demo →';
+      } finally { btn.disabled = false; }
+    });
+    document.getElementById('btn-reset-demo')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-reset-demo');
+      btn.disabled = true; btn.textContent = 'Limpiando…';
+      try {
+        const pid = _getProfileId();
+        await fetch(`${KAIROS_API}/api/v1/demo/reset?profile_id=${encodeURIComponent(pid)}`, { method: 'DELETE' });
+        await _refreshToolCache();
+        toast('Datos demo eliminados', 'ok');
+      } catch {
+        toast('Error al limpiar datos', 'warn');
+      } finally { btn.disabled = false; btn.textContent = 'Limpiar →'; }
+    });
 
     // Request herramienta
     document.querySelector('.hr-request .hr-btn')?.addEventListener('click', () => toast('Cuéntanos qué herramienta necesitas en tu próximo check-in', 'ok'));
@@ -4884,10 +5433,12 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
       if (tag && ml) {
         const risk = ml.risk_level || ml.risk || 'bajo';
         const riskLabel = { bajo:'Riesgo bajo', moderado:'Riesgo moderado', alto:'Riesgo alto' }[risk] || risk;
-        tag.textContent = `Score de bienestar · hoy · ${riskLabel}`;
+        const TREND_LABEL = { improving:'mejorando', worsening:'atención', stable:'estable' };
+        const trendSuffix = state.trend?.direction ? ` · ${TREND_LABEL[state.trend.direction] || state.trend.direction}` : '';
+        tag.textContent = `Score de bienestar · hoy · ${riskLabel}${trendSuffix}`;
       }
-      if (h2 && diag && diag.patterns && diag.patterns.length) {
-        const mainPattern = diag.patterns[0];
+      if (h2 && diag && (diag.matched_patterns || diag.patterns) && (diag.matched_patterns || diag.patterns).length) {
+        const mainPattern = (diag.matched_patterns || diag.patterns)[0];
         const labels = { distres_severo:'Estrés elevado detectado', distres_moderado:'Señales de estrés moderado', distres_leve:'Estrés leve', fatiga_digital:'Fatiga digital', uso_digital_elevado:'Alto uso digital', privacion_sueno:'Privación de sueño', sueno_deficiente:'Calidad de sueño baja', baja_energia:'Energía reducida', deficit_foco:'Déficit de foco', dependencia_redes:'Uso excesivo de redes', bienestar_en_rango:'Todo en rango normal' };
         h2.textContent = labels[mainPattern] || 'Análisis del día completado.';
       }
@@ -4910,11 +5461,13 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
           }).join('');
       }
     }
-    // Sync pring circles + right-panel agents + insight cards
+    // Sync pring circles + right-panel agents + insight card + week label
     applyLiveScores();
+    updateWeekRange();
   }
 
   function showView(name){
+    if (name === 'chat'){ openChat(state.checkinDone ? 'kairos' : 'recopilacion'); return; }
     if (!name || !document.querySelector(`[data-view="${name}"]`)) name = 'dashboard';
     document.querySelectorAll('[data-view]').forEach(v => v.classList.toggle('view-active', v.dataset.view === name));
     document.body.dataset.view = name;
@@ -4930,6 +5483,12 @@ body.theme-deep .ambient::after{background: radial-gradient(circle, rgba(99,102,
     if (name === 'agentes') renderAgentsBoard();
     // refresh analytics with live data when entering analytics
     if (name === 'analytics') refreshAnalytics();
+    // update habitos stats from tool cache
+    if (name === 'habitos') _updateHabitosStats();
+    // update herramientas meta from tool cache
+    if (name === 'herramientas') _updateHerramientasMeta();
+    // update settings profile from session
+    if (name === 'ajustes') _updateSettingsProfile();
     // Update hash without triggering scroll
     if (location.hash.slice(1).split('?')[0] !== name){
       history.replaceState(null, '', '#' + name);
@@ -5064,9 +5623,10 @@ document.body.appendChild(mount);
   #kairos-auth {
     position: fixed; inset: 0; z-index: 9999;
     background:
-      radial-gradient(ellipse 80% 60% at 20% 35%, rgba(78, 52, 168, .55) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 78% 65%, rgba(116, 75, 196, .45) 0%, transparent 65%),
-      radial-gradient(ellipse at 50% 50%, #1a1340 0%, #0a0820 55%, #050414 100%);
+      radial-gradient(ellipse 80% 60% at 20% 35%, rgba(139,92,246,.45) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 78% 65%, rgba(99,102,241,.38) 0%, transparent 65%),
+      radial-gradient(ellipse 50% 50% at 50% 100%, rgba(217,70,239,.18) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 50%, #0D0B1F 0%, #0D0B1F 55%, #0D0B1F 100%);
     color: #e6e9ff;
     font-family: 'Inter', -apple-system, sans-serif;
     display: flex; align-items: center; justify-content: center;
@@ -5116,11 +5676,11 @@ document.body.appendChild(mount);
   }
   .ka-logo {
     width: 44px; height: 44px; border-radius: 13px;
-    background: linear-gradient(135deg, #8b6fff 0%, #6d4cff 60%, #4c2ed9 100%);
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 60%, #4338ca 100%);
     display: grid; place-items: center;
     font-family: 'Outfit','Plus Jakarta Sans', sans-serif;
     font-weight: 800; color: #fff; font-size: 22px;
-    box-shadow: 0 12px 36px -10px rgba(139,111,255,.7), inset 0 1px 0 rgba(255,255,255,.25);
+    box-shadow: 0 12px 36px -10px rgba(139,92,246,.7), inset 0 1px 0 rgba(255,255,255,.25);
   }
   .ka-brand-name { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
   .ka-brand-sub { display: block; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(230,233,255,.45); margin-top: 2px; }
@@ -5131,7 +5691,7 @@ document.body.appendChild(mount);
     letter-spacing: -.035em;
   }
   .ka-hero h1 .accent {
-    background: linear-gradient(135deg, #a78bfa 0%, #8b6fff 50%, #6d4cff 100%);
+    background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 50%, #8b5cf6 100%);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
   }
@@ -5146,8 +5706,8 @@ document.body.appendChild(mount);
     content: ''; position: absolute; inset: 0; border-radius: 50%;
   }
   .ka-orb::before {
-    background: radial-gradient(circle at 35% 35%, #c4b5fd 0%, #8b6fff 35%, #4c2ed9 70%, transparent 100%);
-    box-shadow: 0 0 60px 12px rgba(139,111,255,.55), inset 0 0 30px rgba(255,255,255,.15);
+    background: radial-gradient(circle at 35% 35%, #c4b5fd 0%, #8b5cf6 35%, #4338ca 70%, transparent 100%);
+    box-shadow: 0 0 60px 12px rgba(139,92,246,.55), inset 0 0 30px rgba(255,255,255,.15);
     animation: ka-pulse 4s ease-in-out infinite;
   }
   .ka-orb::after {
@@ -5171,15 +5731,15 @@ document.body.appendChild(mount);
     padding: 32px 28px;
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
-    box-shadow: 0 40px 90px -30px rgba(20,10,60,.7), inset 0 1px 0 rgba(255,255,255,.06);
+    box-shadow: 0 40px 90px -30px rgba(20,10,60,.7), inset 0 1px 0 rgba(255,255,255,0.07);
   }
   .ka-card-title { margin: 0 0 4px; font-size: 22px; font-weight: 700; letter-spacing: -.02em; font-family: 'Plus Jakarta Sans','Outfit', sans-serif; }
   .ka-card-sub { margin: 0 0 22px; color: rgba(230,233,255,.55); font-size: 13px; }
   .ka-action-chip {
     display: flex; align-items: center; gap: 8px;
     width: 100%;
-    background: rgba(139,111,255,.08);
-    border: 1px solid rgba(139,111,255,.22);
+    background: rgba(139,92,246,.08);
+    border: 1px solid rgba(139,92,246,.22);
     border-radius: 14px;
     padding: 12px 14px;
     color: rgba(230,233,255,.85); font-size: 13px;
@@ -5187,12 +5747,12 @@ document.body.appendChild(mount);
     cursor: pointer;
     transition: background .15s, border-color .15s;
   }
-  .ka-action-chip:hover { background: rgba(139,111,255,.14); border-color: rgba(139,111,255,.35); }
+  .ka-action-chip:hover { background: rgba(139,92,246,.14); border-color: rgba(139,92,246,.35); }
   .ka-action-chip .arrow { color: #a78bfa; font-weight: 700; }
   .ka-tabs {
     display: grid; grid-template-columns: 1fr 1fr;
     background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 999px;
     padding: 4px;
     margin-bottom: 18px;
@@ -5205,8 +5765,8 @@ document.body.appendChild(mount);
   }
   .ka-tab.on {
     color: #fff;
-    background: linear-gradient(135deg, rgba(139,111,255,.4), rgba(109,76,255,.35));
-    box-shadow: 0 4px 14px -4px rgba(139,111,255,.5);
+    background: linear-gradient(135deg, rgba(139,92,246,.4), rgba(99,102,241,.35));
+    box-shadow: 0 4px 14px -4px rgba(139,92,246,.5);
   }
   .ka-input {
     position: relative; margin-bottom: 12px;
@@ -5219,7 +5779,7 @@ document.body.appendChild(mount);
   .ka-field {
     display: block; width: 100%;
     background: rgba(255,255,255,.03);
-    border: 1px solid rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 14px;
     padding: 14px 16px 14px 46px;
     font-family: inherit; font-size: 14px; color: #fff;
@@ -5228,23 +5788,23 @@ document.body.appendChild(mount);
   .ka-field::placeholder { color: rgba(230,233,255,.4); }
   .ka-field:focus {
     outline: none;
-    border-color: rgba(139,111,255,.5);
-    background: rgba(139,111,255,.05);
-    box-shadow: 0 0 0 4px rgba(139,111,255,.12);
+    border-color: rgba(139,92,246,.5);
+    background: rgba(139,92,246,.05);
+    box-shadow: 0 0 0 4px rgba(139,92,246,.12);
   }
   .ka-input:focus-within .ka-icon { color: #a78bfa; }
   .ka-cta {
     width: 100%;
-    background: linear-gradient(135deg, #8b6fff 0%, #6d4cff 100%);
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
     color: #fff; font-weight: 700; font-size: 15px;
     border: none; border-radius: 14px;
     padding: 15px 18px;
     cursor: pointer; margin-top: 8px;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     transition: transform .12s ease, box-shadow .2s ease, filter .2s;
-    box-shadow: 0 14px 34px -10px rgba(109,76,255,.65), inset 0 1px 0 rgba(255,255,255,.18);
+    box-shadow: 0 14px 34px -10px rgba(99,102,241,.65), inset 0 1px 0 rgba(255,255,255,.18);
   }
-  .ka-cta:hover { transform: translateY(-1px); box-shadow: 0 18px 42px -10px rgba(109,76,255,.75); filter: brightness(1.05); }
+  .ka-cta:hover { transform: translateY(-1px); box-shadow: 0 18px 42px -10px rgba(99,102,241,.75); filter: brightness(1.05); }
   .ka-cta:disabled { opacity: .55; cursor: not-allowed; transform: none; }
   .ka-social-row {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
@@ -5253,7 +5813,7 @@ document.body.appendChild(mount);
   .ka-social {
     display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 14px;
     padding: 12px;
     cursor: pointer;
@@ -5280,10 +5840,10 @@ document.body.appendChild(mount);
   }
   .ka-banner.show { display: flex; }
   .ka-banner.ok {
-    background: linear-gradient(135deg, rgba(139,111,255,.18), rgba(109,76,255,.12));
+    background: linear-gradient(135deg, rgba(139,92,246,.18), rgba(99,102,241,.12));
     border: 1px solid rgba(167,139,250,.4);
     color: #e6e9ff;
-    box-shadow: 0 8px 24px -10px rgba(139,111,255,.5);
+    box-shadow: 0 8px 24px -10px rgba(139,92,246,.5);
   }
   .ka-banner.err {
     background: rgba(220,80,80,.12);
@@ -5292,7 +5852,7 @@ document.body.appendChild(mount);
   }
   .ka-banner .ka-banner-icon {
     width: 22px; height: 22px; border-radius: 50%;
-    background: linear-gradient(135deg, #8b6fff, #6d4cff);
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
     display: grid; place-items: center; flex-shrink: 0;
     color: #fff; font-weight: 700; font-size: 13px;
     margin-top: 1px;
@@ -5324,9 +5884,9 @@ document.body.appendChild(mount);
   .ka-float-chip.ml { top: 50%; left: -32px; animation-delay: 1.5s; }
   .ka-float-chip .dot {
     width: 22px; height: 22px; border-radius: 50%;
-    background: linear-gradient(135deg, #8b6fff, #6d4cff);
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
     display: grid; place-items: center;
-    box-shadow: 0 4px 12px -2px rgba(139,111,255,.6);
+    box-shadow: 0 4px 12px -2px rgba(139,92,246,.6);
   }
   .ka-float-chip strong { color: #fff; font-weight: 600; }
   .ka-float-chip .meta { color: rgba(230,233,255,.5); font-size: 11px; }
@@ -5336,8 +5896,8 @@ document.body.appendChild(mount);
   .ka-onb-head h1 { margin: 0 0 6px; font-size: 30px; font-weight: 700; letter-spacing: -.02em; font-family: 'Plus Jakarta Sans','Outfit', sans-serif; }
   .ka-onb-head p { margin: 0; color: rgba(230,233,255,.65); font-size: 15px; }
   .ka-progress { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
-  .ka-progress .bar { flex: 1; height: 6px; background: rgba(255,255,255,.08); border-radius: 999px; overflow: hidden; }
-  .ka-progress .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #a78bfa, #6d4cff); transform-origin: left; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+  .ka-progress .bar { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 999px; overflow: hidden; }
+  .ka-progress .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #a78bfa, #6366f1); transform-origin: left; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
   .ka-progress .pct { color: rgba(230,233,255,.7); font-size: 13px; font-variant-numeric: tabular-nums; }
   .ka-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
@@ -5353,15 +5913,15 @@ document.body.appendChild(mount);
     position: relative;
     backdrop-filter: blur(12px);
   }
-  .ka-tile:hover { transform: translateY(-2px); border-color: rgba(167,139,250,.4); box-shadow: 0 16px 36px -16px rgba(139,111,255,.4); }
+  .ka-tile:hover { transform: translateY(-2px); border-color: rgba(167,139,250,.4); box-shadow: 0 16px 36px -16px rgba(139,92,246,.4); }
   .ka-tile.done { border-color: rgba(167,139,250,.45); background: rgba(48,30,110,.45); }
-  .ka-tile.active { border-color: rgba(139,111,255,.55); box-shadow: 0 0 0 1px rgba(139,111,255,.25), 0 16px 36px -16px rgba(139,111,255,.5); }
+  .ka-tile.active { border-color: rgba(139,92,246,.55); box-shadow: 0 0 0 1px rgba(139,92,246,.25), 0 16px 36px -16px rgba(139,92,246,.5); }
   .ka-tile-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .ka-tile-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(230,233,255,.45); letter-spacing: .08em; }
   .ka-tile h3 { margin: 4px 0 6px; font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
   .ka-chip {
     display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,.06);
+    background: rgba(255,255,255,0.07);
     padding: 4px 10px; border-radius: 999px;
     font-size: 11px; font-weight: 600; letter-spacing: .03em;
     color: rgba(230,233,255,.75);
@@ -5369,8 +5929,8 @@ document.body.appendChild(mount);
   .ka-chip-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(230,233,255,.5); }
   .ka-chip.done { color: #c4b5fd; background: rgba(167,139,250,.14); }
   .ka-chip.done .ka-chip-dot { background: #a78bfa; box-shadow: 0 0 0 3px rgba(167,139,250,.22); }
-  .ka-chip.active { color: #a78bfa; background: rgba(139,111,255,.16); }
-  .ka-chip.active .ka-chip-dot { background: #8b6fff; }
+  .ka-chip.active { color: #a78bfa; background: rgba(139,92,246,.16); }
+  .ka-chip.active .ka-chip-dot { background: #8b5cf6; }
   .ka-tile-sub { color: rgba(230,233,255,.7); font-size: 13px; margin: 0 0 6px; }
   .ka-tile-desc { color: rgba(230,233,255,.55); font-size: 13px; margin: 0 0 14px; line-height: 1.5; }
   .ka-tile-meta { display: flex; gap: 14px; font-size: 12px; color: rgba(230,233,255,.55); }
@@ -5394,27 +5954,27 @@ document.body.appendChild(mount);
     display: flex; align-items: center; gap: 14px;
     padding: 14px 18px;
     background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 14px;
     cursor: pointer;
     transition: all .15s ease;
     font-family: inherit; color: #e6e9ff; font-size: 15px;
     text-align: left;
   }
-  .ka-opt:hover { border-color: rgba(167,139,250,.32); background: rgba(139,111,255,.06); }
+  .ka-opt:hover { border-color: rgba(167,139,250,.32); background: rgba(139,92,246,.06); }
   .ka-opt.on {
-    border-color: rgba(139,111,255,.6);
-    background: linear-gradient(135deg, rgba(139,111,255,.16), rgba(109,76,255,.12));
-    box-shadow: 0 0 0 1px rgba(139,111,255,.28);
+    border-color: rgba(139,92,246,.6);
+    background: linear-gradient(135deg, rgba(139,92,246,.16), rgba(99,102,241,.12));
+    box-shadow: 0 0 0 1px rgba(139,92,246,.28);
   }
   .ka-opt-num {
     width: 28px; height: 28px; border-radius: 50%;
-    background: rgba(255,255,255,.08); color: rgba(230,233,255,.75);
+    background: rgba(255,255,255,0.07); color: rgba(230,233,255,.75);
     display: grid; place-items: center;
     font-size: 13px; font-weight: 600;
     flex-shrink: 0;
   }
-  .ka-opt.on .ka-opt-num { background: linear-gradient(135deg, #8b6fff, #6d4cff); color: #fff; }
+  .ka-opt.on .ka-opt-num { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; }
   .ka-opt-label { flex: 1; }
   .ka-opt-emoji { font-size: 22px; opacity: .8; }
   .ka-run-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; }
@@ -5942,73 +6502,125 @@ document.body.appendChild(mount);
 <!-- ═══ KAIRÓS LIVE MODULE — datos reales + recomendaciones + hábitos + notifs ═══ -->
 <style>
 /* ── App usage bar ── */
-.kl-usage { margin: 14px 0 0; display: flex; flex-direction: column; gap: 6px; }
-.kl-usage-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-.kl-usage-label { width: 90px; color: var(--muted, #94a3b8); flex-shrink: 0; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-.kl-usage-bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.07); overflow: hidden; }
-.kl-usage-fill { height: 100%; border-radius: 3px; transition: width .7s ease; }
-.kl-usage-pct { width: 38px; text-align: right; color: var(--muted, #94a3b8); flex-shrink: 0; }
-.kl-hero-sub { font-size: 12px; color: var(--muted,#94a3b8); margin-top: 4px; }
+.kl-usage { margin: 18px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.kl-usage-row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
+.kl-usage-label { width: 96px; color: var(--muted); flex-shrink: 0; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; font-weight: 500; letter-spacing: -.01em; }
+.kl-usage-bar { flex: 1; height: 5px; border-radius: 999px; background: var(--line, rgba(15,10,46,.07)); overflow: hidden; }
+.kl-usage-fill { height: 100%; border-radius: 999px; transition: width .8s cubic-bezier(.2,.7,.2,1); }
+.kl-usage-pct { width: 38px; text-align: right; color: var(--muted); flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.kl-hero-sub {
+  font-size: 11.5px; color: var(--muted); margin-top: 6px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.kl-hero-sub::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--teal-500); flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+}
+body.theme-deep .kl-usage-bar { background: rgba(255,255,255,0.07); }
 
 /* ── Recommendations slider ── */
 .kl-rec-wrap {
-  margin: 16px 0 4px;
-  display: flex; flex-direction: column; gap: 10px;
+  margin: 22px 0 6px;
+  display: flex; flex-direction: column; gap: 12px;
 }
-.kl-rec-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted,#64748b); }
+.kl-rec-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .14em; color: var(--muted);
+  display: flex; align-items: center; gap: 10px;
+}
+.kl-rec-label::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .kl-rec-track {
-  display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;
-  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.1) transparent;
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px;
+  scrollbar-width: thin; scrollbar-color: rgba(139,92,246,.15) transparent;
 }
+.kl-rec-track::-webkit-scrollbar { height: 4px; }
+.kl-rec-track::-webkit-scrollbar-thumb { background: rgba(139,92,246,.18); border-radius: 2px; }
 .kl-rec-card {
-  flex-shrink: 0; width: 220px; border-radius: 14px;
-  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-  padding: 13px 14px; display: flex; flex-direction: column; gap: 6px;
+  flex-shrink: 0; width: 230px; border-radius: 16px;
+  background: var(--surface); border: 1px solid var(--line);
+  padding: 16px 16px 14px;
+  display: flex; flex-direction: column; gap: 7px;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  box-shadow: 0 4px 16px -10px rgba(50,30,120,.12);
 }
-.kl-rec-kind { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
-.kl-rec-kind.habit { color: #34d399; }
-.kl-rec-kind.tip { color: #60a5fa; }
-.kl-rec-kind.warning { color: #fbbf24; }
-.kl-rec-kind.reflection { color: #a78bfa; }
-.kl-rec-title { font-size: 13px; font-weight: 600; line-height: 1.3; }
-.kl-rec-body { font-size: 12px; color: var(--muted,#94a3b8); line-height: 1.4; }
+.kl-rec-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139,92,246,.25);
+  box-shadow: 0 14px 30px -16px rgba(99,102,241,.3);
+}
+.kl-rec-kind {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .12em; padding: 3px 8px; border-radius: 5px;
+  align-self: flex-start;
+}
+.kl-rec-kind.habit { color: #059669; background: rgba(52,211,153,.1); }
+.kl-rec-kind.tip { color: #4338ca; background: rgba(99,102,241,.1); }
+.kl-rec-kind.warning { color: #b45309; background: rgba(245,158,11,.1); }
+.kl-rec-kind.reflection { color: #7c3aed; background: rgba(139,92,246,.1); }
+.kl-rec-title { font-size: 13.5px; font-weight: 600; line-height: 1.35; color: var(--ink); letter-spacing: -.01em; }
+.kl-rec-body { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
 .kl-rec-accept {
-  margin-top: 4px; align-self: flex-start;
-  background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.35);
-  color: #a5b4fc; border-radius: 20px; padding: 4px 12px;
-  font-size: 11px; font-weight: 600; cursor: pointer; transition: background .2s;
+  margin-top: 2px; align-self: flex-start;
+  background: linear-gradient(135deg, rgba(139,92,246,.12), rgba(99,102,241,.1));
+  border: 1px solid rgba(139,92,246,.25);
+  color: var(--teal-600); border-radius: 999px; padding: 5px 12px;
+  font-family: inherit; font-size: 11.5px; font-weight: 600;
+  cursor: pointer; transition: all .15s ease;
+  letter-spacing: -.01em;
 }
-.kl-rec-accept:hover { background: rgba(99,102,241,.3); }
+.kl-rec-accept:hover {
+  background: linear-gradient(135deg, rgba(139,92,246,.2), rgba(99,102,241,.18));
+  border-color: rgba(139,92,246,.4);
+  transform: translateY(-1px);
+}
+body.theme-deep .kl-rec-card { background: var(--surface); border-color: rgba(255,255,255,0.07); }
+body.theme-deep .kl-rec-accept { color: #c4b5fd; border-color: rgba(196,181,253,.25); }
 
 /* ── Habit accept pill in chat ── */
 .kl-habit-pill {
-  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
-  background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.3);
-  color: #34d399; border-radius: 20px; padding: 5px 14px;
-  font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s;
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 8px;
+  background: rgba(52,211,153,.08); border: 1px solid rgba(52,211,153,.25);
+  color: #059669; border-radius: 999px; padding: 6px 14px;
+  font-family: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: all .15s ease;
+  letter-spacing: -.01em;
 }
-.kl-habit-pill:hover { background: rgba(52,211,153,.25); }
-.kl-habit-pill.accepted { opacity: .5; pointer-events: none; }
+.kl-habit-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #34d399; flex-shrink: 0; }
+.kl-habit-pill:hover { background: rgba(52,211,153,.16); border-color: rgba(52,211,153,.4); transform: translateY(-1px); }
+.kl-habit-pill.accepted { opacity: .45; pointer-events: none; }
 
 /* ── Toast notification ── */
 .kl-toast {
   position: fixed; bottom: 24px; right: 24px; z-index: 9999;
-  background: #0d1322; border: 1px solid rgba(251,191,36,.35);
-  border-radius: 14px; padding: 14px 18px; max-width: 300px;
-  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  background: #1e1b4b;
+  color: #f5f3ff;
+  border-radius: 16px; padding: 14px 18px 14px 16px; max-width: 300px;
+  box-shadow: 0 20px 50px -12px rgba(20,10,60,.5), inset 0 0 0 1px rgba(196,181,253,.15);
   display: flex; flex-direction: column; gap: 6px;
-  animation: kl-slideup .3s ease; font-size: 13px;
+  animation: kl-slideup .3s cubic-bezier(.2,.7,.2,1); font-size: 13px;
+  backdrop-filter: blur(8px);
 }
-@keyframes kl-slideup { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
-.kl-toast-title { font-weight: 700; color: #fbbf24; font-size: 13px; }
-.kl-toast-body { color: #cbd5e1; line-height: 1.4; }
-.kl-toast-close { position: absolute; top: 10px; right: 12px; background: none; border: none; color: #64748b; cursor: pointer; font-size: 16px; line-height: 1; }
+@keyframes kl-slideup { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform: none; } }
+.kl-toast-title { font-weight: 700; font-size: 13px; letter-spacing: -.01em; }
+.kl-toast-body { color: rgba(245,243,255,.75); line-height: 1.45; font-size: 12.5px; }
+.kl-toast-close {
+  position: absolute; top: 10px; right: 12px;
+  background: rgba(255,255,255,0.07); border: none;
+  color: rgba(245,243,255,.55); cursor: pointer;
+  width: 22px; height: 22px; border-radius: 6px;
+  display: grid; place-items: center; font-size: 14px; line-height: 1;
+  transition: background .15s;
+}
+.kl-toast-close:hover { background: rgba(255,255,255,.12); color: #f5f3ff; }
 .kl-toast-action {
   margin-top: 4px; align-self: flex-start;
-  background: rgba(251,191,36,.15); border: 1px solid rgba(251,191,36,.3);
-  color: #fbbf24; border-radius: 20px; padding: 5px 14px;
-  font-size: 11px; font-weight: 600; cursor: pointer;
+  background: rgba(196,181,253,.15); border: 1px solid rgba(196,181,253,.25);
+  color: #c4b5fd; border-radius: 999px; padding: 5px 14px;
+  font-family: inherit; font-size: 11.5px; font-weight: 600;
+  cursor: pointer; transition: all .15s ease; letter-spacing: -.01em;
 }
+.kl-toast-action:hover { background: rgba(196,181,253,.25); }
 </style>
 
 <script>
@@ -6209,7 +6821,11 @@ document.body.appendChild(mount);
         <div class="hb-sub">Nuevo · sugerido por Kairós</div>
       </div>
       <div class="hb-week">
-        <span class="d">L</span><span class="d">M</span><span class="d">X</span><span class="d">J</span><span class="d">V</span><span class="d">S</span><span class="d today">D</span>
+        ${['L','M','X','J','V','S','D'].map((lbl,i) => {
+          const jsD = new Date().getDay();
+          const tIdx = jsD === 0 ? 6 : jsD - 1;
+          return `<span class="d${i === tIdx ? ' today' : ''}">${lbl}</span>`;
+        }).join('')}
       </div>`;
 
     list.appendChild(row);
@@ -6409,26 +7025,26 @@ document.body.appendChild(mount);
       <div class="km-tag">Diario</div>
       <h2 style="font-size:24px;margin-bottom:6px">Nueva entrada</h2>
       <p style="margin-bottom:16px">¿Cómo fue tu día? Escribe lo que quieras recordar.</p>
-      <input id="diary-title" placeholder="Título (opcional)" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
-      <textarea id="diary-content" placeholder="Escribe aquí…" rows="5" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff);margin-bottom:12px"></textarea>
+      <input id="diary-title" placeholder="Título (opcional)" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
+      <textarea id="diary-content" placeholder="Escribe aquí…" rows="5" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff);margin-bottom:12px"></textarea>
       <div style="margin-bottom:16px">
         <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted,#7a6c9e);margin-bottom:8px">¿Cómo te sentiste?</div>
         <div style="display:flex;gap:8px" id="diary-mood-btns">
-          <button class="diary-mood-btn" data-mood="bien"   style="flex:1;padding:10px;border:1.5px solid rgba(15,10,46,.1);border-radius:12px;font-family:inherit;font-size:13px;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0f0a2e);transition:all .15s ease">😊 Bien</button>
-          <button class="diary-mood-btn" data-mood="neutral" style="flex:1;padding:10px;border:1.5px solid rgba(15,10,46,.1);border-radius:12px;font-family:inherit;font-size:13px;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0f0a2e);transition:all .15s ease">😐 Neutral</button>
-          <button class="diary-mood-btn" data-mood="dificil" style="flex:1;padding:10px;border:1.5px solid rgba(15,10,46,.1);border-radius:12px;font-family:inherit;font-size:13px;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0f0a2e);transition:all .15s ease">😔 Difícil</button>
+          <button class="diary-mood-btn" data-mood="bien"   style="flex:1;padding:10px;border:1.5px solid rgba(15,10,46,.1);border-radius:12px;font-family:inherit;font-size:13px;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0D0B1F);transition:all .15s ease">😊 Bien</button>
+          <button class="diary-mood-btn" data-mood="neutral" style="flex:1;padding:10px;border:1.5px solid rgba(15,10,46,.1);border-radius:12px;font-family:inherit;font-size:13px;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0D0B1F);transition:all .15s ease">😐 Neutral</button>
+          <button class="diary-mood-btn" data-mood="dificil" style="flex:1;padding:10px;border:1.5px solid rgba(15,10,46,.1);border-radius:12px;font-family:inherit;font-size:13px;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0D0B1F);transition:all .15s ease">😔 Difícil</button>
         </div>
       </div>
       <div style="display:flex;gap:8px">
         <button id="diary-save-btn" class="kc-done" style="flex:1">Guardar entrada</button>
-        <button id="diary-history-btn" class="kc-done" style="flex:1;background:rgba(15,10,46,.06);color:var(--ink,#0f0a2e);box-shadow:none">Ver historial</button>
+        <button id="diary-history-btn" class="kc-done" style="flex:1;background:rgba(15,10,46,.06);color:var(--ink,#0D0B1F);box-shadow:none">Ver historial</button>
       </div>
     </div>
     <div id="diary-history-view" style="display:none">
       <div class="km-tag">Diario</div>
       <h2 style="font-size:24px;margin-bottom:6px">Historial</h2>
       <div id="diary-entries-list" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:16px"></div>
-      <button id="diary-back-btn" class="kc-done" style="width:100%;background:rgba(15,10,46,.06);color:var(--ink,#0f0a2e);box-shadow:none">← Nueva entrada</button>
+      <button id="diary-back-btn" class="kc-done" style="width:100%;background:rgba(15,10,46,.06);color:var(--ink,#0D0B1F);box-shadow:none">← Nueva entrada</button>
     </div>
   </div>
 </div>
@@ -6444,10 +7060,10 @@ document.body.appendChild(mount);
     <h2 style="font-size:24px;margin-bottom:6px">Registrar sesión</h2>
     <p style="margin-bottom:18px">¿Cuánto tiempo meditaste?</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px" id="med-duration-btns">
-      <button class="med-dur-btn" data-min="5"  style="padding:16px;border:1.5px solid rgba(15,10,46,.1);border-radius:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0f0a2e);transition:all .15s ease">5 min</button>
-      <button class="med-dur-btn" data-min="10" style="padding:16px;border:1.5px solid rgba(15,10,46,.1);border-radius:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0f0a2e);transition:all .15s ease">10 min</button>
-      <button class="med-dur-btn" data-min="15" style="padding:16px;border:1.5px solid rgba(15,10,46,.1);border-radius:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0f0a2e);transition:all .15s ease">15 min</button>
-      <button class="med-dur-btn" data-min="20" style="padding:16px;border:1.5px solid rgba(15,10,46,.1);border-radius:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0f0a2e);transition:all .15s ease">20 min</button>
+      <button class="med-dur-btn" data-min="5"  style="padding:16px;border:1.5px solid rgba(15,10,46,.1);border-radius:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0D0B1F);transition:all .15s ease">5 min</button>
+      <button class="med-dur-btn" data-min="10" style="padding:16px;border:1.5px solid rgba(15,10,46,.1);border-radius:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0D0B1F);transition:all .15s ease">10 min</button>
+      <button class="med-dur-btn" data-min="15" style="padding:16px;border:1.5px solid rgba(15,10,46,.1);border-radius:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0D0B1F);transition:all .15s ease">15 min</button>
+      <button class="med-dur-btn" data-min="20" style="padding:16px;border:1.5px solid rgba(15,10,46,.1);border-radius:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface,#fff);color:var(--ink,#0D0B1F);transition:all .15s ease">20 min</button>
     </div>
     <button id="med-log-btn" class="kc-done" style="width:100%" disabled>Selecciona una duración</button>
   </div>
@@ -6536,6 +7152,7 @@ document.body.appendChild(mount);
       });
       if (!res.ok) throw new Error(res.statusText);
       closeModal('diary-modal', 'diary-scrim');
+      window.dispatchEvent(new Event('kairos:tool-saved'));
       // update meta in diary card
       const metaEl = document.querySelector('[data-tool="diario"] .hr-card-meta span:first-child');
       if (metaEl) metaEl.textContent = 'Última entrada · hace un momento';
@@ -6556,7 +7173,7 @@ document.body.appendChild(mount);
         document.querySelectorAll('.diary-mood-btn').forEach(bb => {
           bb.style.background = '';
           bb.style.borderColor = 'rgba(15,10,46,.1)';
-          bb.style.color = 'var(--ink,#0f0a2e)';
+          bb.style.color = 'var(--ink,#0D0B1F)';
         });
         b.style.background = 'linear-gradient(135deg,#8b5cf6,#6366f1)';
         b.style.borderColor = 'transparent';
@@ -6582,7 +7199,7 @@ document.body.appendChild(mount);
     document.querySelectorAll('.med-dur-btn').forEach(b => {
       b.style.background = '';
       b.style.borderColor = 'rgba(15,10,46,.1)';
-      b.style.color = 'var(--ink,#0f0a2e)';
+      b.style.color = 'var(--ink,#0D0B1F)';
     });
     const logBtn = document.getElementById('med-log-btn');
     logBtn.disabled = true;
@@ -6606,6 +7223,7 @@ document.body.appendChild(mount);
       });
       if (!res.ok) throw new Error(res.statusText);
       closeModal('med-modal', 'med-scrim');
+      window.dispatchEvent(new Event('kairos:tool-saved'));
       // update meta in meditación card
       const metaEl = document.querySelector('[data-tool="calm"] .hr-card-meta span:first-child');
       if (metaEl) metaEl.textContent = `Última sesión · ${selectedDuration} min`;
@@ -6625,7 +7243,7 @@ document.body.appendChild(mount);
         document.querySelectorAll('.med-dur-btn').forEach(bb => {
           bb.style.background = '';
           bb.style.borderColor = 'rgba(15,10,46,.1)';
-          bb.style.color = 'var(--ink,#0f0a2e)';
+          bb.style.color = 'var(--ink,#0D0B1F)';
         });
         b.style.background = 'linear-gradient(135deg,#8b5cf6,#6366f1)';
         b.style.borderColor = 'transparent';
@@ -6701,11 +7319,11 @@ document.body.appendChild(mount);
     </button>
     <div class="km-tag" style="background:rgba(29,185,84,.12);color:#16a34a">Spotify</div>
     <h2 style="font-size:24px;margin-bottom:6px">Música activa</h2>
-    <div id="spotify-current" style="padding:14px;background:rgba(29,185,84,.07);border:1px solid rgba(29,185,84,.2);border-radius:12px;font-size:14px;margin-bottom:18px;min-height:44px;color:var(--ink,#0f0a2e)">Cargando…</div>
+    <div id="spotify-current" style="padding:14px;background:rgba(29,185,84,.07);border:1px solid rgba(29,185,84,.2);border-radius:12px;font-size:14px;margin-bottom:18px;min-height:44px;color:var(--ink,#0D0B1F)">Cargando…</div>
     <p style="font-size:13px;color:var(--muted,#7a6c9e);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em">Simular pista</p>
-    <input id="spotify-track"  placeholder="Canción" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
-    <input id="spotify-artist" placeholder="Artista" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
-    <input id="spotify-genre"  placeholder="Género (opcional)" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:16px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
+    <input id="spotify-track"  placeholder="Canción" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
+    <input id="spotify-artist" placeholder="Artista" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
+    <input id="spotify-genre"  placeholder="Género (opcional)" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:16px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
     <button id="spotify-save-btn" class="kc-done" style="width:100%;background:linear-gradient(135deg,#1db954,#16a34a)">Guardar pista</button>
   </div>
 </div>
@@ -6723,10 +7341,10 @@ document.body.appendChild(mount);
     <h2 style="font-size:24px;margin-bottom:6px">Eventos de hoy</h2>
     <div id="cal-events-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:18px"></div>
     <p style="font-size:13px;color:var(--muted,#7a6c9e);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em">Agregar evento</p>
-    <input id="cal-title"    placeholder="Título del evento" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
+    <input id="cal-title"    placeholder="Título del evento" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <input id="cal-time"     placeholder="Hora (ej: 10:00)" style="flex:1;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
-      <input id="cal-duration" placeholder="Duración (min)" type="number" min="5" max="480" style="flex:1;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
+      <input id="cal-time"     placeholder="Hora (ej: 10:00)" style="flex:1;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
+      <input id="cal-duration" placeholder="Duración (min)" type="number" min="5" max="480" style="flex:1;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
     </div>
     <button id="cal-add-btn" class="kc-done" style="width:100%;background:linear-gradient(135deg,#4f46e5,#6366f1)">Agregar evento</button>
   </div>
@@ -6787,6 +7405,7 @@ document.body.appendChild(mount);
       document.getElementById('spotify-track').value  = '';
       document.getElementById('spotify-artist').value = '';
       document.getElementById('spotify-genre').value  = '';
+      window.dispatchEvent(new Event('kairos:tool-saved'));
       const metaEl = document.querySelector('[data-tool="spotify"] .hr-card-meta span:first-child');
       if (metaEl) metaEl.textContent = `Escuchando · ${track}`;
       if (typeof toast === 'function') toast(`Pista actualizada: ${track}`, 'ok');
@@ -6847,6 +7466,7 @@ document.body.appendChild(mount);
       document.getElementById('cal-time').value     = '';
       document.getElementById('cal-duration').value = '';
       await loadCalEvents();
+      window.dispatchEvent(new Event('kairos:tool-saved'));
       const metaEl = document.querySelector('[data-tool="calendar"] .hr-card-meta span:first-child');
       if (metaEl) metaEl.textContent = `Evento agregado · ${title}`;
       if (typeof toast === 'function') toast(`Evento "${title}" agregado al calendario`, 'ok');
@@ -6901,12 +7521,12 @@ document.body.appendChild(mount);
     </button>
     <div class="km-tag" style="background:rgba(239,68,68,.1);color:#dc2626">Salud</div>
     <h2 style="font-size:24px;margin-bottom:6px">Datos de hoy</h2>
-    <div id="health-current" style="padding:12px 14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:12px;font-size:13.5px;margin-bottom:18px;color:var(--ink,#0f0a2e)">Cargando…</div>
+    <div id="health-current" style="padding:12px 14px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:12px;font-size:13.5px;margin-bottom:18px;color:var(--ink,#0D0B1F)">Cargando…</div>
     <p style="font-size:13px;color:var(--muted,#7a6c9e);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em">Actualizar métricas</p>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
-      <input id="health-steps"   type="number" min="0" placeholder="Pasos"   style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
-      <input id="health-sleep"   type="number" min="0" max="24" step="0.5" placeholder="Sueño h" style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
-      <input id="health-hr"      type="number" min="0" placeholder="FC bpm"  style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
+      <input id="health-steps"   type="number" min="0" placeholder="Pasos"   style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
+      <input id="health-sleep"   type="number" min="0" max="24" step="0.5" placeholder="Sueño h" style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
+      <input id="health-hr"      type="number" min="0" placeholder="FC bpm"  style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
     </div>
     <button id="health-save-btn" class="kc-done" style="width:100%;background:linear-gradient(135deg,#ef4444,#f97316)">Guardar datos</button>
   </div>
@@ -6925,8 +7545,8 @@ document.body.appendChild(mount);
     <h2 style="font-size:24px;margin-bottom:6px">Tareas</h2>
     <div id="notion-tasks-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:18px"></div>
     <p style="font-size:13px;color:var(--muted,#7a6c9e);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em">Nueva tarea</p>
-    <input id="notion-title"    placeholder="Título de la tarea" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
-    <input id="notion-deadline" placeholder="Deadline (ej: 2026-05-15, opcional)" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:16px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
+    <input id="notion-title"    placeholder="Título de la tarea" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:8px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
+    <input id="notion-deadline" placeholder="Deadline (ej: 2026-05-15, opcional)" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:16px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
     <button id="notion-add-btn" class="kc-done" style="width:100%;background:linear-gradient(135deg,#1f2937,#374151)">Agregar tarea</button>
   </div>
 </div>
@@ -6942,12 +7562,12 @@ document.body.appendChild(mount);
     </button>
     <div class="km-tag" style="background:rgba(252,76,2,.1);color:#ea580c">Strava</div>
     <h2 style="font-size:24px;margin-bottom:6px">Última actividad</h2>
-    <div id="strava-current" style="padding:12px 14px;background:rgba(252,76,2,.06);border:1px solid rgba(252,76,2,.15);border-radius:12px;font-size:13.5px;margin-bottom:18px;color:var(--ink,#0f0a2e)">Cargando…</div>
+    <div id="strava-current" style="padding:12px 14px;background:rgba(252,76,2,.06);border:1px solid rgba(252,76,2,.15);border-radius:12px;font-size:13.5px;margin-bottom:18px;color:var(--ink,#0D0B1F)">Cargando…</div>
     <p style="font-size:13px;color:var(--muted,#7a6c9e);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em">Registrar actividad</p>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
-      <input id="strava-sport"    placeholder="Deporte" style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
-      <input id="strava-duration" type="number" min="1" placeholder="Duración min" style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
-      <input id="strava-distance" type="number" min="0" step="0.1" placeholder="km (opc)" style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0f0a2e);background:var(--surface,#fff)"/>
+      <input id="strava-sport"    placeholder="Deporte" style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
+      <input id="strava-duration" type="number" min="1" placeholder="Duración min" style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
+      <input id="strava-distance" type="number" min="0" step="0.1" placeholder="km (opc)" style="box-sizing:border-box;padding:10px 12px;border:1px solid rgba(15,10,46,.1);border-radius:10px;font-family:inherit;font-size:13px;outline:none;color:var(--ink,#0D0B1F);background:var(--surface,#fff)"/>
     </div>
     <button id="strava-save-btn" class="kc-done" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#fc4c02,#f97316)">Registrar</button>
   </div>

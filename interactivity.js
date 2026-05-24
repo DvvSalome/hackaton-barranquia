@@ -437,23 +437,16 @@
     const tp = typing(a.color);
     setTimeout(()=>{
       tp.remove();
-      const greet = {
-        animo:   'Hola, soy Ánimo. Te haré un par de preguntas.',
-        sueno:   'Hola, soy Sueño. Una pregunta muy breve.',
-        foco:    'Hola, soy Foco. Cuéntame qué te importa hoy.',
-        energia: 'Hola, soy Energía. Última pregunta.',
-      }[id];
-      bubble('bot', greet, { agent: a.title, color: a.color });
-      setTimeout(askCurrent, 500);
+      bubble('bot', `Hola, soy ${a.title}.`, { agent: a.title, color: a.color });
+      setTimeout(askCurrent, 400);
     }, 500);
   }
 
-  function askCurrent(){
+  async function askCurrent(){
     const id = FLOW_AGENTS[flowState.agentIdx];
     const a = AGENTS[id];
     const q = a.questions[flowState.questionIdx];
     if (!q){
-      // agent done, go next
       flowState.agentIdx++;
       flowState.questionIdx = 0;
       if (flowState.agentIdx < FLOW_AGENTS.length) introAgent();
@@ -461,11 +454,21 @@
       return;
     }
     const tp = typing(a.color);
-    setTimeout(()=>{
-      tp.remove();
-      bubble('bot', q.ask, { agent: a.title, color: a.color });
-      renderChips(q, a);
-    }, 450);
+    let questionText = q.ask;
+    try {
+      const res = await fetch(KAIROS_API + '/agents/' + id + '/question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context: buildCheckInTranscript() || '' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.question) questionText = data.question;
+      }
+    } catch (_) { /* usa fallback */ }
+    tp.remove();
+    bubble('bot', questionText, { agent: a.title, color: a.color });
+    renderChips(q, a);
   }
 
   function nextStep(){

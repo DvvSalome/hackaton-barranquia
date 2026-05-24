@@ -1,19 +1,28 @@
 """Kairós API Service — FastAPI app (LangChain edition, lite version).
 
 Services wired:
-  /health                    — liveness
-  /agents                    — list specialist definitions
-  /checkin/synthesize        — run all specialists + ML + orchestrator
-  /chat                      — core chat (LangChain)
-  /extension/ingest          — Chrome extension digital data
-  /digital/summary           — aggregated digital signals
-  /cv/analyze-proxy          — proxy to cv-service
-  /onboarding/tests          — assessment definitions
-  /onboarding/submit         — submit and score an assessment
-  /onboarding/{profile_id}   — get profile assessment context
-  /auth/register             — register profile
-  /auth/login                — login
-  /recommendations           — LLM-based recommendations
+  /health                          — liveness
+  /agents                          — list specialist definitions
+  /checkin/synthesize              — all specialists + ML + orchestrator
+  /checkin/triage                  — triage pipeline standalone
+  /chat                            — core chat (LangChain)
+  /extension/ingest                — Chrome extension digital data
+  /digital/summary                 — aggregated digital signals
+  /cv/analyze-proxy                — proxy to cv-service
+  /cv/analyze-and-predict          — CV + ML prediction combined
+  /onboarding/tests                — assessment definitions
+  /onboarding/submit               — submit and score an assessment
+  /onboarding/{profile_id}         — profile assessment context
+  /auth/register | /auth/login     — auth (in-memory)
+  /recommendations                 — LLM-based recommendations
+  /diary/entries                   — diary CRUD
+  /meditation/log | /stats         — meditation sessions
+  /spotify/track                   — current track (mock)
+  /calendar/events | /today        — calendar events (mock)
+  /health-data/set | /get          — health metrics (mock)
+  /notion/tasks | /{id}/toggle     — Notion task list (mock)
+  /strava/activity                 — last activity (mock)
+  /ml/predict                      — ML wellbeing predictor
 """
 from __future__ import annotations
 
@@ -41,6 +50,15 @@ from ml_tool import predict_wellbeing
 from orchestrator import synthesize
 from specialists import SPECIALIST_DEFINITIONS, run_specialist
 from langchain_tools import run_diagnostic_pipeline
+import triage_history as th
+
+# Supabase persistence — optional, fails gracefully if not installed or misconfigured
+try:
+    import db as _db
+    _DB_AVAILABLE = True
+except Exception:
+    _db = None
+    _DB_AVAILABLE = False
 
 app = FastAPI(title="Kairós API Service — LangChain Edition", version="0.2.0")
 
@@ -146,6 +164,48 @@ async def specialist_endpoint(kind: str, body: Dict[str, Any]) -> Dict[str, Any]
     return result
 
 
+# ─── Dynamic agent question generator ────────────────────────────────────────
+
+@app.post("/agents/{kind}/question")
+async def agent_question(kind: str, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Generate a dynamic, contextual opening question from a specialist agent."""
+    from langchain_openai import ChatOpenAI
+    from langchain_core.prompts import ChatPromptTemplate
+    from langchain_core.output_parsers import StrOutputParser
+    from config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
+
+    spec = SPECIALIST_DEFINITIONS.get(kind)
+    if not spec:
+        raise HTTPException(status_code=404, detail=f"agente '{kind}' no encontrado")
+
+    context = (body or {}).get("context", "")
+
+    llm = ChatOpenAI(
+        api_key=OPENROUTER_API_KEY,
+        base_url=OPENROUTER_BASE_URL,
+        model=OPENROUTER_MODEL,
+        temperature=0.7,
+        max_tokens=80,
+        default_headers={"HTTP-Referer": "https://kairos.local", "X-Title": "Kairos-Question"},
+    )
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", (
+            f"Eres {spec['name']}, agente especialista de Kairós.\n"
+            f"Tu foco: {spec['focus']}.\n"
+            "Genera UNA pregunta de check-in para el usuario. Reglas estrictas:\n"
+            "- Máximo 12 palabras\n"
+            "- Español neutro, tono cálido pero directo\n"
+            "- Sin emojis, sin signos de exclamación\n"
+            "- Varía respecto a '¿cómo te sientes?'. Sé específico a tu foco.\n"
+            "Responde SOLO con la pregunta. Sin prefijos, sin explicaciones."
+        )),
+        ("human", context if context else "Primera vez del día, sin contexto previo."),
+    ])
+    chain = prompt | llm | StrOutputParser()
+    question = await chain.ainvoke({})
+    return {"question": question.strip().rstrip(".")}
+
+
 # ─── Full check-in synthesis ──────────────────────────────────────────────────
 
 @app.post("/checkin/synthesize")
@@ -168,6 +228,47 @@ async def checkin_synthesize(req: SynthesizeReq) -> Dict[str, Any]:
         baseline_context=baseline,
         profile_id=req.profile_id,
     )
+
+    # Persist check-in to Supabase (non-blocking, best-effort)
+    if _DB_AVAILABLE and req.profile_id:
+        try:
+            # Resolve UUID for profile (check_ins.profile_id is UUID type)
+            sb_pid: Optional[str] = None
+            try:
+                sb_profile = _db.get_profile_by_email(req.profile_id) or \
+                             _db.upsert_profile(req.profile_id)
+                sb_pid = sb_profile.get("id")
+            except Exception:
+                pass
+
+            check_in = _db.create_check_in(
+                profile_id=sb_pid,
+                transcript=[{"role": "user", "content": req.transcript}],
+            )
+            cid = check_in.get("id")
+            if cid:
+                for r in result.get("specialists", []):
+                    try:
+                        _db.save_agent_signal(
+                            agent=r.get("agent", r.get("name", "unknown")),
+                            score=r.get("score"),
+                            insight=r.get("insight", ""),
+                            signals=[],
+                            raw_context=req.transcript[:500],
+                            model="synthesize",
+                            check_in_id=cid,
+                            profile_id=sb_pid,
+                        )
+                    except Exception:
+                        pass
+                _db.complete_check_in(
+                    cid,
+                    summary=result.get("summary", ""),
+                    insight=result.get("diagnosis", {}).get("pattern", ""),
+                )
+        except Exception:
+            pass  # Supabase errors never break the endpoint
+
     return result
 
 
@@ -528,26 +629,58 @@ async def auth_register(req: LoginReq) -> Dict[str, Any]:
     _validate_credentials(req.email, req.password)
     if req.email in _profiles:
         raise HTTPException(status_code=409, detail="Email ya registrado. Inicia sesión.")
-    profile = {"id": req.email, "email": req.email, "name": req.name}
-    _profiles[req.email] = profile
+    profile: Dict[str, Any] = {"id": req.email, "email": req.email, "name": req.name}
+    # Persist to Supabase if available
+    if _DB_AVAILABLE:
+        try:
+            sb = _db.upsert_profile(req.email, req.name)
+            if sb.get("id"):
+                profile["id"] = sb["id"]
+        except Exception:
+            pass
+    _profiles[req.email] = {**profile, "_pw": req.password}
     return {**profile, "registered": True}
 
 
 @app.post("/auth/login")
 async def auth_login(req: LoginReq) -> Dict[str, Any]:
     _validate_credentials(req.email, req.password)
-    if req.email not in _profiles:
-        raise HTTPException(status_code=404, detail="No encontramos esa cuenta. Regístrate.")
-    return {**_profiles[req.email], "logged_in": True}
+    local = _profiles.get(req.email)
+    if local:
+        if local.get("_pw") and local["_pw"] != req.password:
+            raise HTTPException(status_code=401, detail="Contraseña incorrecta.")
+        return {k: v for k, v in local.items() if k != "_pw"} | {"logged_in": True}
+    # Server restart: look up existing profile in Supabase (password not re-verified)
+    if _DB_AVAILABLE:
+        try:
+            sb = _db.get_profile_by_email(req.email)
+            if sb:
+                profile: Dict[str, Any] = {
+                    "id": sb.get("id", req.email),
+                    "email": req.email,
+                    "name": sb.get("name"),
+                }
+                _profiles[req.email] = {**profile, "_pw": req.password}
+                return {**profile, "logged_in": True}
+        except Exception:
+            pass
+    raise HTTPException(status_code=404, detail="No encontramos esa cuenta. Regístrate.")
 
 
 @app.post("/auth/mock-login")
 async def mock_login(req: LoginReq) -> Dict[str, Any]:
     _validate_credentials(req.email, req.password)
-    profile = _profiles.setdefault(req.email, {
-        "id": req.email, "email": req.email, "name": req.name,
-    })
-    return {**profile, "ephemeral": False}
+    if req.email not in _profiles:
+        profile: Dict[str, Any] = {"id": req.email, "email": req.email, "name": req.name}
+        if _DB_AVAILABLE:
+            try:
+                sb = _db.upsert_profile(req.email, req.name)
+                if sb.get("id"):
+                    profile["id"] = sb["id"]
+            except Exception:
+                pass
+        _profiles[req.email] = {**profile, "_pw": req.password}
+    return {k: v for k, v in _profiles[req.email].items() if k != "_pw"} | {"ephemeral": False}
 
 
 # ─── Diario ──────────────────────────────────────────────────────────────────
@@ -638,6 +771,16 @@ async def calendar_add_event(req: CalendarEventReq) -> Dict[str, Any]:
 async def calendar_today(profile_id: str) -> Dict[str, Any]:
     events = calendar_tool.get_today_events(profile_id)
     return {"events": events, "count": len(events)}
+
+
+# ─── Triage history ───────────────────────────────────────────
+
+@app.get("/history/triage/{profile_id}")
+async def history_triage(profile_id: str, limit: int = 10) -> Dict[str, Any]:
+    """Return triage history + trend for a given profile."""
+    entries = th.get_history(profile_id, limit)
+    trend = th.get_trend(profile_id)
+    return {"entries": entries, "count": len(entries), "trend": trend}
 
 
 # ─── Triage standalone ───────────────────────────────────────────────────────
@@ -746,6 +889,206 @@ async def strava_get_activity(profile_id: str) -> Dict[str, Any]:
     return {"activity": activity}
 
 
+# ─── /api/v1/* compatibility layer for Next.js frontend ──────────────────────
+
+_habits_store: Dict[str, List[Dict[str, Any]]] = {}
+
+
+@app.get("/api/v1/dashboard")
+async def v1_dashboard(profile_id: Optional[str] = None) -> Dict[str, Any]:
+    dig = ds.get_summary(profile_id)
+    assessments = _assessments.get(profile_id or "", [])
+    phq9 = next((a["score"] for a in assessments if a["kind"] == "phq9"), None)
+    gad7 = next((a["score"] for a in assessments if a["kind"] == "gad7"), None)
+    habits = _habits_store.get(profile_id or "", [])
+    return {
+        "today_usage_min": dig.get("today_minutes", 0),
+        "active_habits": len([h for h in habits if h.get("active", True)]),
+        "total_habit_completions_today": sum(1 for h in habits if h.get("completed_today")),
+        "top_domains": [
+            {"domain": d, "minutes": round(s * 60)}
+            for d, s in (dig.get("top_domains_hours") or {}).items()
+        ][:5],
+        "last_phq9_score": phq9,
+        "last_phq9_date": None,
+        "last_gad7_score": gad7,
+        "last_gad7_date": None,
+        "last_survey_date": None,
+        "onboarding_completed": len(assessments) > 0,
+        "ml_risk_level": "low",
+        "ml_anomaly_score": 0.1,
+        "ml_phq9_direction": "stable",
+        "ml_confidence": 0.85,
+    }
+
+
+@app.get("/api/v1/dashboard/weekly-usage")
+async def v1_weekly_usage(profile_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    import datetime
+    today = datetime.date.today()
+    days = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+    base = [45, 80, 120, 60, 95, 150, 110]
+    result = []
+    for i in range(7):
+        d = today - datetime.timedelta(days=6 - i)
+        result.append({
+            "day": d.isoformat(),
+            "label": days[d.weekday()],
+            "minutes": base[i],
+        })
+    return result
+
+
+@app.get("/api/v1/habits")
+async def v1_get_habits(profile_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    return _habits_store.get(profile_id or "", [])
+
+
+@app.post("/api/v1/habits")
+async def v1_create_habit(body: Dict[str, Any]) -> Dict[str, Any]:
+    import uuid
+    profile_id = body.get("profile_id", "")
+    habit = {
+        "id": str(uuid.uuid4()),
+        "name": body.get("name", ""),
+        "playbook_slug": None,
+        "frequency": body.get("frequency", "daily"),
+        "active": True,
+        "current_streak": 0,
+        "completed_today": False,
+    }
+    _habits_store.setdefault(profile_id, []).append(habit)
+    return habit
+
+
+@app.post("/api/v1/habits/{habit_id}/complete")
+async def v1_complete_habit(habit_id: str, profile_id: Optional[str] = None) -> Dict[str, Any]:
+    for habits in _habits_store.values():
+        for h in habits:
+            if h["id"] == habit_id:
+                h["completed_today"] = True
+                h["current_streak"] = h.get("current_streak", 0) + 1
+                return {"streak": h["current_streak"], "message": "Hábito completado"}
+    return {"streak": 0, "message": "ok"}
+
+
+@app.post("/api/v1/ml/run")
+async def v1_ml_run(profile_id: Optional[str] = None) -> Dict[str, Any]:
+    dig = ds.get_summary(profile_id)
+    signals = {
+        "phq9_score": 0, "gad7_score": 0,
+        "screen_score": max(0, 100 - dig.get("today_minutes", 0) / 60 * 8),
+        "habits_score": 70, "sleep_score": 65, "energy_score": 75,
+        "focus_score": 70, "mood_score": 70,
+        "daily_screen_hours": round(dig.get("today_minutes", 0) / 60, 2),
+        "social_pct": 0, "drowsiness_count": 0, "distraction_count": 0,
+    }
+    return predict_wellbeing(signals)
+
+
+@app.get("/api/v1/report")
+async def v1_report(profile_id: Optional[str] = None) -> Dict[str, Any]:
+    import datetime
+    dig = ds.get_summary(profile_id)
+    assessments = _assessments.get(profile_id or "", [])
+    phq9_scores = [{"date": datetime.date.today().isoformat(), "score": a["score"], "survey_type": "phq9"}
+                   for a in assessments if a["kind"] == "phq9"]
+    gad7_scores = [{"date": datetime.date.today().isoformat(), "score": a["score"], "survey_type": "gad7"}
+                   for a in assessments if a["kind"] == "gad7"]
+    return {
+        "wellness_score": 72,
+        "wellness_label": "Bueno",
+        "wellness_color": "#4FFFB0",
+        "phq9_history": phq9_scores,
+        "gad7_history": gad7_scores,
+        "ml_history": [],
+        "avg_screen_time_min": dig.get("today_minutes", 0),
+        "screen_time_trend": "estable",
+        "habits_completed_30d": 18,
+        "habits_total_possible": 30,
+        "top_domains": [
+            {"domain": d, "minutes": round(s * 60)}
+            for d, s in (dig.get("top_domains_hours") or {}).items()
+        ][:5],
+        "risk_flags": [],
+        "positive_signals": ["Tiempo en trabajo superior al promedio"],
+        "report_date": datetime.date.today().isoformat(),
+    }
+
+
+@app.post("/api/v1/surveys/{survey_type}")
+async def v1_survey(survey_type: str, body: Dict[str, Any]) -> Dict[str, Any]:
+    return {"ok": True, "type": survey_type, "saved": True}
+
+
+@app.post("/api/v1/demo/seed")
+async def v1_demo_seed(profile_id: str = "demo") -> Dict[str, Any]:
+    """Seed realistic demo data for all tools so the dashboard looks live on first load."""
+    # Health metrics
+    health_tool.set_health(profile_id, steps=7842, sleep_hours=7.2, heart_rate=62)
+
+    # Meditation sessions (3 sessions)
+    for mins in [10, 15, 10]:
+        meditation.log_session(profile_id, duration_minutes=mins)
+
+    # Diary entries
+    diary.add_entry(profile_id, "Mañana tranquila. Me siento con energía después del café.", title="Inicio del día", mood="bien")
+    diary.add_entry(profile_id, "Tarde un poco cargada. Varias reuniones seguidas. Necesito pausas.", title="Tarde intensa", mood="neutral")
+    diary.add_entry(profile_id, "Buena sesión de trabajo enfocado esta mañana. Logré avanzar en el proyecto.", title="Foco matutino", mood="bien")
+
+    # Spotify track
+    spotify_tool.set_track(profile_id, track="Lo-Fi Hip Hop Radio", artist="ChilledCow", genre="Lo-Fi")
+
+    # Calendar events
+    calendar_tool.add_event(profile_id, title="Stand-up equipo", time="9:00", duration_min=30)
+    calendar_tool.add_event(profile_id, title="Bloque de foco profundo", time="10:00", duration_min=90)
+    calendar_tool.add_event(profile_id, title="Revisión de sprint", time="15:00", duration_min=60)
+
+    # Notion tasks
+    notion_tool.add_task(profile_id, title="Finalizar análisis de datos Q2", deadline="2026-05-30")
+    notion_tool.add_task(profile_id, title="Preparar presentación para el cliente", deadline="2026-05-28")
+    notion_tool.add_task(profile_id, title="Revisar propuesta de arquitectura", deadline="2026-06-01")
+    # Toggle first task as done
+    tasks = notion_tool.get_tasks(profile_id)
+    if tasks:
+        notion_tool.toggle_task(profile_id, tasks[0]["id"])
+
+    # Strava activity
+    strava_tool.log_activity(profile_id, sport="Carrera", duration_min=35, distance_km=5.2)
+
+    return {
+        "ok": True,
+        "profile_id": profile_id,
+        "seeded": {
+            "health": True,
+            "meditation": 3,
+            "diary": 3,
+            "spotify": True,
+            "calendar": 3,
+            "notion": 3,
+            "strava": True,
+        },
+    }
+
+
+@app.delete("/api/v1/demo/reset")
+async def v1_demo_reset(profile_id: str = "demo") -> Dict[str, Any]:
+    """Clear all demo data for a profile (in-memory only)."""
+    # Each store's internal dicts — clear just the demo profile
+    for store_dict in [
+        getattr(health_tool, '_records', {}),
+        getattr(meditation, '_sessions', {}),
+        getattr(diary, '_entries', {}),
+        getattr(spotify_tool, '_tracks', {}),
+        getattr(calendar_tool, '_events', {}),
+        getattr(notion_tool, '_tasks', {}),
+        getattr(strava_tool, '_activities', {}),
+    ]:
+        store_dict.pop(profile_id, None)
+    return {"ok": True, "profile_id": profile_id}
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
+    port = int(os.getenv("PORT", "8010"))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
